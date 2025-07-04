@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "ClipCrab",
+    "subtitle": "Clipboard Manager",
+    "version": "Version"
+  },
+  "header": {
+    "refresh": "Refresh",
+    "clear_all": "Clear All"
+  },
+  "search": {
+    "placeholder": "Search clipboard history...",
+    "clear": "Clear"
+  },
+  "stats": {
+    "total_items": "Total Items",
+    "last_updated": "Last Updated"
+  },
+  "clipboard": {
+    "copy": "Copy",
+    "delete": "Delete",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "copied": "Copied!",
+    "deleted": "Deleted!",
+    "clear_all": "All history cleared!",
+    "image_copied": "Image copied!",
+    "text_copied": "Text copied!"
+  },
+  "content_types": {
+    "text": "Text",
+    "image": "Image",
+    "url": "URL",
+    "email": "Email",
+    "number": "Number",
+    "long_text": "Long Text"
+  },
+  "time": {
+    "just_now": "Just now",
+    "minutes_ago": "minutes ago",
+    "hours_ago": "hours ago",
+    "days_ago": "days ago"
+  },
+  "modal": {
+    "delete_title": "Delete Confirmation",
+    "delete_message": "Are you sure you want to delete this clipboard item?",
+    "clear_warning": "This action cannot be undone!",
+    "content": "Content:",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "empty_state": {
+    "title": "No clipboard history yet",
+    "message": "When you copy something, it will appear here"
+  },
+  "no_results": {
+    "title": "No results found",
+    "message": "No items match your search criteria"
+  },
+  "loading": {
+    "message": "Loading..."
+  },
+  "errors": {
+    "copy_failed": "Copy failed!",
+    "delete_failed": "Delete failed!",
+    "clear_failed": "Clear failed!"
+  }
+} 

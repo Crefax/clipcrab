@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClipCrab - Clipboard Manager</title>
+    <link rel="stylesheet" href="style/base.css" />
+    <link rel="stylesheet" href="style/components.css" />
+    <link rel="stylesheet" href="style/layout.css" />
+    <link rel="stylesheet" href="style/responsive.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <div class="logo">
+            <i class="fas fa-clipboard"></i>
+            <h1>ClipCrab</h1>
+          </div>
+          <div class="header-actions">
+            <div class="language-dropdown">
+              <button id="language-toggle" class="language-toggle">
+                <i class="fas fa-globe"></i>
+                <span class="current-language-label">Language</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <div id="language-menu" class="language-menu">
+                <div class="language-option" data-lang="tr">
+                  <span class="flag">🇹🇷</span>
+                  <span class="name">Türkçe</span>
+                  <i class="fas fa-check"></i>
+                </div>
+                <div class="language-option" data-lang="en">
+                  <span class="flag">🇺🇸</span>
+                  <span class="name">English</span>
+                  <i class="fas fa-check"></i>
+                </div>
+              </div>
+            </div>
+            <button id="refresh" class="btn btn-primary">
+              <i class="fas fa-sync-alt"></i>
+              <span>Refresh</span>
+            </button>
+            <button id="clear-all" class="btn btn-danger">
+              <i class="fas fa-trash"></i>
+              <span>Clear</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Search Bar -->
+      <div class="search-container">
+        <div class="search-box">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="search-input" placeholder="Search clipboard history..." />
+          <button id="clear-search" class="clear-search">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-container">
+        <div class="stat-item">
+          <i class="fas fa-list"></i>
+          <span id="total-items">0</span>
+          <label>Total</label>
+        </div>
+        <div class="stat-item">
+          <i class="fas fa-clock"></i>
+          <span id="last-updated">--</span>
+          <label>Last Updated</label>
+        </div>
+      </div>
+
+      <!-- Content Area -->
+      <main class="content">
+        <div class="history-container">
+          <div id="loading" class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading...</span>
+          </div>
+          
+          <div id="empty-state" class="empty-state" style="display: none;">
+            <i class="fas fa-clipboard"></i>
+            <h3>No clipboard history yet</h3>
+            <p>Your copied items will appear here</p>
+          </div>
+
+          <div id="no-results" class="empty-state" style="display: none;">
+            <i class="fas fa-search"></i>
+            <h3>No results found</h3>
+            <p>Try changing your search criteria</p>
+          </div>
+
+          <ul id="history-list" class="history-list"></ul>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="footer-content">
+          <span>ClipCrab v1.0</span>
+          <span>•</span>
+          <span>Safely stores your clipboard history</span>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="locales/i18n.js"></script>
+    <script type="module" src="script/main.js"></script>
+    <script>
+      // Basit dil dropdown fonksiyonu
+      document.addEventListener('DOMContentLoaded', function() {
+        const dropdown = document.querySelector('.language-dropdown');
+        const toggle = document.getElementById('language-toggle');
+        const menu = document.getElementById('language-menu');
+        
+        if (dropdown && toggle && menu) {
+          // Toggle click
+          toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+          });
+          
+          // Dil seçenekleri
+          const options = menu.querySelectorAll('.language-option');
+          options.forEach(option => {
+            option.addEventListener('click', function() {
+              const lang = this.dataset.lang;
+              console.log('Language selected:', lang);
+              
+              // Dil değiştir
+              if (window.i18n && window.i18n.setLanguage) {
+                window.i18n.setLanguage(lang);
+              } else {
+                // Fallback: sayfayı yenile
+                localStorage.setItem('language', lang);
+                window.location.reload();
+              }
+            });
+          });
+          
+          // Dışarı tıklayınca kapat
+          document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+              dropdown.classList.remove('open');
+            }
+          });
+          
+          // ESC ile kapat
+          document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+              dropdown.classList.remove('open');
+            }
+          });
+          
+          console.log('Language dropdown initialized');
+        } else {
+          console.error('Language dropdown elements not found');
+        }
+      });
+    </script>
+  </body>
+</html>

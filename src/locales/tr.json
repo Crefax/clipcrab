@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "ClipCrab",
+    "subtitle": "Clipboard Yöneticisi",
+    "version": "Sürüm"
+  },
+  "header": {
+    "refresh": "Yenile",
+    "clear_all": "Tümünü Temizle"
+  },
+  "search": {
+    "placeholder": "Clipboard geçmişinde ara...",
+    "clear": "Temizle"
+  },
+  "stats": {
+    "total_items": "Toplam Öğe",
+    "last_updated": "Son Güncelleme"
+  },
+  "clipboard": {
+    "copy": "Kopyala",
+    "delete": "Sil",
+    "expand": "Genişlet",
+    "collapse": "Daralt",
+    "copied": "Kopyalandı!",
+    "deleted": "Silindi!",
+    "clear_all": "Tüm geçmiş temizlendi!",
+    "image_copied": "Resim kopyalandı!",
+    "text_copied": "Metin kopyalandı!"
+  },
+  "content_types": {
+    "text": "Metin",
+    "image": "Resim",
+    "url": "Bağlantı",
+    "email": "E-posta",
+    "number": "Sayı",
+    "long_text": "Uzun Metin"
+  },
+  "time": {
+    "just_now": "Az önce",
+    "minutes_ago": "dakika önce",
+    "hours_ago": "saat önce",
+    "days_ago": "gün önce"
+  },
+  "modal": {
+    "delete_title": "Silme Onayı",
+    "delete_message": "Bu clipboard öğesini silmek istediğinizden emin misiniz?",
+    "clear_warning": "Bu işlem geri alınamaz!",
+    "content": "İçerik:",
+    "cancel": "İptal",
+    "confirm": "Onayla"
+  },
+  "empty_state": {
+    "title": "Henüz clipboard geçmişi yok",
+    "message": "Bir şeyler kopyaladığınızda burada görünecek"
+  },
+  "no_results": {
+    "title": "Sonuç bulunamadı",
+    "message": "Arama kriterlerinize uygun öğe bulunamadı"
+  },
+  "loading": {
+    "message": "Yükleniyor..."
+  },
+  "errors": {
+    "copy_failed": "Kopyalama başarısız!",
+    "delete_failed": "Silme başarısız!",
+    "clear_failed": "Temizleme başarısız!"
+  }
+} 

@@ -1,0 +1,10 @@
+/* Content Area */
+.content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.history-container {
+  height: 100%;
+  overflow-y: auto;
+} 
