@@ -387,6 +387,62 @@
   background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
 }
 
+.btn-pin {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-pin:hover {
+  background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+  color: white;
+}
+
+.btn-pin.pinned {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  color: #212529;
+}
+
+.btn-pin.pinned:hover {
+  background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+  color: #212529;
+}
+
+/* Pin ikonunu sağ üst köşeye küçük ve minimalist olarak konumlandır */
+.btn-pin-icon {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 2;
+  background: transparent;
+  border: none;
+  color: #6c757d;
+  font-size: 1.1rem;
+  padding: 0.2rem;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: none;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-pin-icon.pinned {
+  color: #ffc107;
+  background: rgba(255, 193, 7, 0.08);
+}
+
+.btn-pin-icon:hover {
+  background: #f1f1f1;
+  color: #495057;
+}
+
+.history-item {
+  position: relative;
+}
+
 /* Modal */
 .modal-overlay {
   position: fixed;

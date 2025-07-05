@@ -21,6 +21,8 @@
     "delete": "Delete",
     "expand": "Expand",
     "collapse": "Collapse",
+    "pin": "Pin",
+    "unpin": "Unpin",
     "copied": "Copied!",
     "deleted": "Deleted!",
     "clear_all": "All history cleared!",

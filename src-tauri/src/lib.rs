@@ -14,7 +14,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::get_clipboard_history,
             commands::delete_clipboard_item,
-            commands::clear_all_history
+            commands::clear_all_history,
+            commands::toggle_pin
         ])
         .run(tauri::generate_context!())
         .expect("Failed to start Tauri application");

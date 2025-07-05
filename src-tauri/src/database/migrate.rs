@@ -11,6 +11,7 @@ pub fn migrate_database(conn: &Connection) {
 
     let has_content_type = columns.iter().any(|col| col == "content_type");
     let has_image_data = columns.iter().any(|col| col == "image_data");
+    let has_pinned = columns.iter().any(|col| col == "pinned");
 
     if !has_content_type {
         conn.execute("ALTER TABLE clipboard_history ADD COLUMN content_type TEXT DEFAULT 'text'", [])
@@ -19,5 +20,9 @@ pub fn migrate_database(conn: &Connection) {
     if !has_image_data {
         conn.execute("ALTER TABLE clipboard_history ADD COLUMN image_data TEXT", [])
             .expect("Failed to add image_data column");
+    }
+    if !has_pinned {
+        conn.execute("ALTER TABLE clipboard_history ADD COLUMN pinned INTEGER DEFAULT 0", [])
+            .expect("Failed to add pinned column");
     }
 } 

@@ -7,7 +7,7 @@ pub fn get_clipboard_history() -> Vec<ClipboardItem> {
     database::migrate_database(&conn);
 
     let mut stmt = conn
-        .prepare("SELECT id, content, content_type, image_data, created_at FROM clipboard_history ORDER BY id DESC LIMIT 50")
+        .prepare("SELECT id, content, content_type, image_data, created_at, pinned FROM clipboard_history ORDER BY pinned DESC, id DESC LIMIT 50")
         .expect("Failed to prepare query");
 
     stmt.query_map([], |row| {
@@ -17,6 +17,7 @@ pub fn get_clipboard_history() -> Vec<ClipboardItem> {
             content_type: row.get(2)?,
             image_data: row.get(3)?,
             created_at: row.get(4)?,
+            pinned: row.get(5)?,
         })
     })
     .expect("Failed to execute query")

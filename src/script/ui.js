@@ -1,5 +1,5 @@
 import { waitForI18n, formatTimeAgo, truncateText, getTextIcon, getTextTypeLabel, showToast } from './utils.js';
-import { copyToClipboard, deleteHistoryItem, getClipboardHistory, getFilteredHistory, getSearchQuery } from './clipboard.js';
+import { copyToClipboard, deleteHistoryItem, togglePin, getClipboardHistory, getFilteredHistory, getSearchQuery } from './clipboard.js';
 
 // DOM Elements
 export const elements = {
@@ -99,6 +99,8 @@ export async function createHistoryItem(item, index) {
   const collapseText = await window.i18n.t('clipboard.collapse');
   const karakterText = await window.i18n.t('stats.total_items');
   const typeLabel = await getTextTypeLabel(item.content, item.content_type);
+  const pinText = await window.i18n.t('clipboard.pin');
+  const unpinText = await window.i18n.t('clipboard.unpin');
 
   // Resim içeriği için özel HTML
   const contentHtml = item.content_type === 'image' && item.image_data 
@@ -117,6 +119,9 @@ export async function createHistoryItem(item, index) {
         <span><i class="${textIcon}"></i>${typeLabel}</span>
       </div>
       <div class="history-buttons">
+        <button class="btn-pin-icon btn-pin ${item.pinned ? 'pinned' : ''}" title="${item.pinned ? unpinText : pinText}">
+          <i class="fas fa-thumbtack"></i>
+        </button>
         <button class="btn-small btn-copy" title="${copyText}">
           <i class="fas fa-copy"></i>
           ${copyText}
@@ -136,10 +141,16 @@ export async function createHistoryItem(item, index) {
   `;
   
   // Event listeners
+  const pinBtn = li.querySelector('.btn-pin');
   const copyBtn = li.querySelector('.btn-copy');
   const expandBtn = li.querySelector('.btn-expand');
   const deleteBtn = li.querySelector('.btn-delete');
   const content = li.querySelector('.history-content');
+  
+  pinBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    togglePin(item.id);
+  });
   
   copyBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -173,24 +184,31 @@ export async function createHistoryItem(item, index) {
   return li;
 }
 
-export function showDeleteConfirmation(item) {
+export async function showDeleteConfirmation(item) {
+  await waitForI18n();
+  const title = await window.i18n.t('modal.delete_title');
+  const message = await window.i18n.t('modal.delete_message');
+  const contentLabel = await window.i18n.t('modal.content');
+  const cancel = await window.i18n.t('modal.cancel');
+  const confirm = await window.i18n.t('modal.confirm');
+
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   modal.innerHTML = `
     <div class="modal">
       <div class="modal-header">
-        <h3><i class="fas fa-exclamation-triangle"></i> ${i18n ? i18n.t('modal.delete_title') : 'Delete Confirmation'}</h3>
+        <h3><i class="fas fa-exclamation-triangle"></i> ${title}</h3>
       </div>
       <div class="modal-body">
-        <p>${i18n ? i18n.t('modal.delete_message') : 'Are you sure you want to delete this clipboard item?'}</p>
+        <p>${message}</p>
         <div class="preview-content">
-          <strong>${i18n ? i18n.t('modal.content') : 'Content:'}</strong>
+          <strong>${contentLabel}</strong>
           <div class="content-preview">${truncateText(item.content, 100)}</div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" id="cancel-delete">${i18n ? i18n.t('modal.cancel') : 'Cancel'}</button>
-        <button class="btn btn-danger" id="confirm-delete">${i18n ? i18n.t('modal.confirm') : 'Confirm'}</button>
+        <button class="btn btn-secondary" id="cancel-delete">${cancel}</button>
+        <button class="btn btn-danger" id="confirm-delete">${confirm}</button>
       </div>
     </div>
   `;
@@ -206,6 +224,7 @@ export function showDeleteConfirmation(item) {
     try {
       await deleteHistoryItem(item.id);
       document.body.removeChild(modal);
+      // UI zaten deleteHistoryItem içinde güncelleniyor
     } catch (error) {
       showToast('Delete operation failed!', 'error');
     }

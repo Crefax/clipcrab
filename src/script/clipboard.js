@@ -89,7 +89,8 @@ export async function clearAllHistory() {
     try {
       await invoke("clear_all_history");
       document.body.removeChild(modal);
-      // Event handler will update UI
+      // UI'yi hemen güncelle
+      await loadClipboardHistory();
     } catch (error) {
       console.error('Error clearing history:', error);
       showToast('Failed to clear history!', 'error');
@@ -107,10 +108,23 @@ export async function clearAllHistory() {
 export async function deleteHistoryItem(id) {
   try {
     await invoke("delete_clipboard_item", { id });
-    // Event handler will update UI
+    // UI'yi hemen güncelle
+    await loadClipboardHistory();
   } catch (error) {
     console.error('Delete error:', error);
     showToast('Delete operation failed!', 'error');
+    throw error;
+  }
+}
+
+export async function togglePin(id) {
+  try {
+    await invoke("toggle_pin", { id });
+    // UI'yi hemen güncelle
+    await loadClipboardHistory();
+  } catch (error) {
+    console.error('Pin toggle error:', error);
+    showToast('Pin operation failed!', 'error');
     throw error;
   }
 }

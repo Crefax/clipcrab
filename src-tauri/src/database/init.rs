@@ -20,7 +20,8 @@ pub fn init_db() -> Connection {
             content TEXT NOT NULL,
             content_type TEXT DEFAULT 'text',
             image_data TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            pinned INTEGER DEFAULT 0
         )",
         [],
     )

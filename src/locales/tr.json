@@ -21,6 +21,8 @@
     "delete": "Sil",
     "expand": "Genişlet",
     "collapse": "Daralt",
+    "pin": "Sabitle",
+    "unpin": "Sabitlemeyi Kaldır",
     "copied": "Kopyalandı!",
     "deleted": "Silindi!",
     "clear_all": "Tüm geçmiş temizlendi!",
