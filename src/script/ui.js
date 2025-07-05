@@ -177,8 +177,16 @@ export async function createHistoryItem(item, index) {
   });
   
   // Click to copy
-  li.addEventListener('click', () => {
-    copyToClipboard(item.content, item.content_type, item.image_data);
+  li.addEventListener('click', (e) => {
+    // Sadece ana öğeye tıklanırsa modal aç
+    if (
+      !e.target.closest('.btn-copy') &&
+      !e.target.closest('.btn-delete') &&
+      !e.target.closest('.btn-pin') &&
+      !e.target.closest('.btn-expand')
+    ) {
+      showMessageModal(item);
+    }
   });
   
   return li;
@@ -275,4 +283,72 @@ export function initLanguageDropdown() {
   if (window.i18n && window.i18n.initLanguageDropdown) {
     window.i18n.initLanguageDropdown();
   }
+} 
+
+// Mesaj detay modalı
+export async function showMessageModal(item) {
+  await waitForI18n();
+  const copyText = await window.i18n.t('clipboard.copy');
+  const deleteText = await window.i18n.t('clipboard.delete');
+  const pinText = await window.i18n.t('clipboard.pin');
+  const unpinText = await window.i18n.t('clipboard.unpin');
+  const closeText = '×';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal message-modal">
+      <div class="modal-header modal-header-message-modal">
+        <button class="modal-pin-button ${item.pinned ? 'modal-pin-active' : 'modal-pin-inactive'}" title="${item.pinned ? unpinText : pinText}">
+          <i class="fas fa-thumbtack"></i>
+        </button>
+        <button class="modal-close" title="Kapat">${closeText}</button>
+      </div>
+      <div class="modal-body">
+        <div class="message-content${item.content.length > 300 ? ' scrollable' : ''}">
+          ${item.content_type === 'image' && item.image_data
+            ? `<img src="data:image/png;base64,${item.image_data}" alt="Clipboard image" />`
+            : `<pre>${item.content}</pre>`}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-small btn-copy" title="${copyText}">
+          <i class="fas fa-copy"></i> ${copyText}
+        </button>
+        <button class="btn-small btn-delete" title="${deleteText}">
+          <i class="fas fa-trash"></i> ${deleteText}
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Kapatma
+  modal.querySelector('.modal-close').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) document.body.removeChild(modal);
+  });
+
+  // Butonlar
+  const pinBtn = modal.querySelector('.modal-pin-button');
+  const copyBtn = modal.querySelector('.btn-copy');
+  const deleteBtn = modal.querySelector('.btn-delete');
+
+  pinBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    await togglePin(item.id);
+    document.body.removeChild(modal);
+  });
+  copyBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    copyToClipboard(item.content, item.content_type, item.image_data);
+  });
+  deleteBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    await showDeleteConfirmation(item);
+    document.body.removeChild(modal);
+  });
 } 

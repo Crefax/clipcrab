@@ -493,8 +493,8 @@
   gap: 0.5rem;
 }
 
-.modal-header i {
-  color: #ffd700;
+.modal-header h3 i {
+  color: #ff0000;
 }
 
 .modal-body {
@@ -592,4 +592,146 @@
   gap: 1rem;
   font-size: 0.9rem;
   color: #6c757d;
+} 
+
+/* Mesaj detay modalı */
+.message-modal {
+  max-width: 600px;
+  width: 95%;
+  min-width: 320px;
+  position: relative;
+  padding-top: 2.5rem;
+}
+
+.message-modal .modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #888;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s;
+}
+.message-modal .modal-close:hover {
+  color: #333;
+}
+
+.message-modal .modal-body {
+  padding: 2rem 1.5rem 1rem 1.5rem;
+  text-align: left;
+}
+
+.message-content {
+  font-size: 1.1rem;
+  color: #222;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  max-height: 350px;
+  overflow-x: auto;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+.message-content.scrollable {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.message-content pre {
+  margin: 0;
+  font-family: inherit;
+  background: none;
+  white-space: pre-wrap;
+}
+
+.message-modal .modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  border-top: 1px solid #eee;
+} 
+
+/* Modal header pin ve close butonları için flex ayarı */
+.modal-header-message-modal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.5rem 0.5rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  background: none;
+  position: relative;
+}
+
+/* Modal Pin Button - Tamamen bağımsız CSS */
+.modal-pin-button {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pinsiz durum - Gri */
+.modal-pin-inactive {
+  color: #6c757d;
+  background: transparent;
+}
+
+.modal-pin-inactive i {
+  color: #6c757d;
+}
+
+.modal-pin-inactive:hover {
+  background: #f1f1f1;
+  color: #495057;
+}
+
+.modal-pin-inactive:hover i {
+  color: #495057;
+}
+
+/* Pinli durum - Sarı */
+.modal-pin-active {
+  color: #ffc107;
+  background: rgba(255, 193, 7, 0.08);
+}
+
+.modal-pin-active i {
+  color: #ffc107;
+}
+
+.modal-pin-active:hover {
+  background: rgba(255, 193, 7, 0.15);
+  color: #e0a800;
+}
+
+.modal-pin-active:hover i {
+  color: #e0a800;
+}
+
+.modal-header-message-modal .modal-close {
+  position: static;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s;
+}
+.modal-header-message-modal .modal-close:hover {
+  color: #333;
 } 
