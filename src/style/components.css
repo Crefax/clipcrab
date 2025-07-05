@@ -302,21 +302,29 @@
   opacity: 0;
 }
 
+/* Resim öğelerinde butonların görünmesi için düzeltme */
 .image-content {
   margin-bottom: 0.75rem;
   text-align: center;
+  position: relative;
+  min-height: 120px; /* Butonlar için minimum yükseklik */
+  max-height: 350px; /* Maksimum yükseklik sınırı */
+  overflow: hidden; /* Taşan kısmı gizle */
 }
 
 .image-content img {
   max-width: 100%;
-  max-height: 200px;
+  max-height: 280px; /* Butonlar için yer bırak */
+  width: auto;
+  height: auto;
+  object-fit: contain; /* Orantıları koru */
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
 }
 
 .image-content img:hover {
-  transform: scale(1.05);
+  transform: scale(1.02); /* Hover efektini küçült */
 }
 
 .image-info {
@@ -324,13 +332,26 @@
   font-size: 0.8rem;
   color: #6c757d;
   font-style: italic;
+  max-height: 40px; /* Bilgi alanı için maksimum yükseklik */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Genel history-actions stili */
 .history-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+}
+
+/* Resim öğelerinde history-actions görünür olsun */
+.history-item .history-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
 }
 
 .history-meta {
@@ -601,6 +622,10 @@
   min-width: 320px;
   position: relative;
   padding-top: 2.5rem;
+  max-height: 90vh; /* Modal maksimum yüksekliği */
+  overflow: hidden; /* Taşan kısmı gizle */
+  display: flex;
+  flex-direction: column;
 }
 
 .message-modal .modal-close {
@@ -622,6 +647,9 @@
 .message-modal .modal-body {
   padding: 2rem 1.5rem 1rem 1.5rem;
   text-align: left;
+  flex: 1;
+  overflow-y: auto; /* İçerik taşarsa kaydırılabilir */
+  max-height: calc(90vh - 150px); /* Header ve footer için yer bırak */
 }
 
 .message-content {
@@ -642,6 +670,19 @@
   overflow-y: auto;
 }
 
+/* Modal içindeki resimler için boyut sınırlaması */
+.message-content img {
+  max-width: 100%;
+  max-height: 250px; /* Daha küçük yükseklik, butonlar için yer bırak */
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: block;
+  margin: 0 auto;
+}
+
 .message-content pre {
   margin: 0;
   font-family: inherit;
@@ -655,6 +696,8 @@
   justify-content: flex-end;
   padding: 1rem 1.5rem 1.5rem 1.5rem;
   border-top: 1px solid #eee;
+  flex-shrink: 0; /* Footer her zaman görünür */
+  background: white; /* Footer arka planı */
 } 
 
 /* Modal header pin ve close butonları için flex ayarı */
