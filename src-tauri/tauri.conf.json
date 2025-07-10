@@ -12,7 +12,8 @@
       {
         "title": "clipcrab",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "label": "main"
       }
     ],
     "security": {
