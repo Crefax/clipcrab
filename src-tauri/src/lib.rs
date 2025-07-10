@@ -80,6 +80,7 @@ fn enable_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .on_window_event(|window, event| match event {
             WindowEvent::CloseRequested { api, .. } => {
                 let _ = window.hide();
@@ -91,6 +92,7 @@ pub fn run() {
             if let Err(e) = enable_tray(app) {
                 eprintln!("Tray icon setup failed: {}", e);
             }
+            
             clipboard::start_clipboard_watcher(app.handle().clone());
             Ok(())
         })
