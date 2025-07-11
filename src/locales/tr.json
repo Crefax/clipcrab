@@ -49,7 +49,11 @@
     "clear_warning": "Bu işlem geri alınamaz!",
     "content": "İçerik:",
     "cancel": "İptal",
-    "confirm": "Onayla"
+    "confirm": "Onayla",
+    "created_at": "Oluşturulma:",
+    "character_count": "Karakter Sayısı:",
+    "content_type": "İçerik Türü:",
+    "close": "Kapat"
   },
   "empty_state": {
     "title": "Henüz clipboard geçmişi yok",

@@ -49,7 +49,11 @@
     "clear_warning": "This action cannot be undone!",
     "content": "Content:",
     "cancel": "Cancel",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "created_at": "Created:",
+    "character_count": "Character Count:",
+    "content_type": "Content Type:",
+    "close": "Close"
   },
   "empty_state": {
     "title": "No clipboard history yet",

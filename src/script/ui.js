@@ -292,7 +292,14 @@ export async function showMessageModal(item) {
   const deleteText = await window.i18n.t('clipboard.delete');
   const pinText = await window.i18n.t('clipboard.pin');
   const unpinText = await window.i18n.t('clipboard.unpin');
-  const closeText = '×';
+  const closeText = await window.i18n.t('modal.close');
+  const createdAtText = await window.i18n.t('modal.created_at');
+  const characterCountText = await window.i18n.t('modal.character_count');
+  const contentTypeText = await window.i18n.t('modal.content_type');
+  
+  const timeAgo = await formatTimeAgo(item.created_at);
+  const fullDateTime = new Date(item.created_at).toLocaleString();
+  const typeLabel = await getTextTypeLabel(item.content, item.content_type);
 
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
@@ -302,7 +309,7 @@ export async function showMessageModal(item) {
         <button class="modal-pin-button ${item.pinned ? 'modal-pin-active' : 'modal-pin-inactive'}" title="${item.pinned ? unpinText : pinText}">
           <i class="fas fa-thumbtack"></i>
         </button>
-        <button class="modal-close" title="Kapat">${closeText}</button>
+        <button class="modal-close" title="${closeText}">×</button>
       </div>
       <div class="modal-body">
         <div class="message-content${item.content.length > 300 ? ' scrollable' : ''}">
@@ -311,13 +318,20 @@ export async function showMessageModal(item) {
             : `<pre>${item.content}</pre>`}
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn-small btn-copy" title="${copyText}">
-          <i class="fas fa-copy"></i> ${copyText}
-        </button>
-        <button class="btn-small btn-delete" title="${deleteText}">
-          <i class="fas fa-trash"></i> ${deleteText}
-        </button>
+      <div class="modal-footer modal-footer-row">
+        <div class="modal-info-group">
+          <span class="info-item"><i class="fas fa-calendar"></i><span class="info-value" title="${fullDateTime}">${timeAgo}</span></span>
+          <span class="info-item"><i class="fas fa-ruler-horizontal"></i><span class="info-value">${item.content.length}</span></span>
+          <span class="info-item"><i class="${getTextIcon(item.content, item.content_type)}"></i><span class="info-value">${typeLabel}</span></span>
+        </div>
+        <div class="modal-btn-group">
+          <button class="btn-small btn-copy" title="${copyText}">
+            <i class="fas fa-copy"></i> ${copyText}
+          </button>
+          <button class="btn-small btn-delete" title="${deleteText}">
+            <i class="fas fa-trash"></i> ${deleteText}
+          </button>
+        </div>
       </div>
     </div>
   `;
