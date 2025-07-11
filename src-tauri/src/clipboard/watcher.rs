@@ -1,6 +1,6 @@
 use crate::database;
 use crate::models::ClipboardUpdateEvent;
-use crate::encryption;
+use crate::security;
 use arboard::Clipboard;
 use base64::{Engine as _, engine::general_purpose};
 use image::ImageBuffer;
@@ -22,7 +22,7 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                         println!("New text content: {}", current);
 
                         // İçeriği şifrele
-                        let encrypted_content = match encryption::encrypt(&current) {
+                        let encrypted_content = match security::encrypt(&current) {
                             Ok(encrypted) => encrypted,
                             Err(e) => {
                                 eprintln!("Failed to encrypt content: {}", e);
@@ -88,7 +88,7 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                         let content = format!("Image ({}x{})", image.width, image.height);
 
                         // İçeriği ve resim verisini şifrele
-                        let encrypted_content = match encryption::encrypt(&content) {
+                        let encrypted_content = match security::encrypt(&content) {
                             Ok(encrypted) => encrypted,
                             Err(e) => {
                                 eprintln!("Failed to encrypt content: {}", e);
@@ -96,7 +96,7 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                             }
                         };
 
-                        let encrypted_image = match encryption::encrypt(&base64_image) {
+                        let encrypted_image = match security::encrypt(&base64_image) {
                             Ok(encrypted) => encrypted,
                             Err(e) => {
                                 eprintln!("Failed to encrypt image data: {}", e);

@@ -1,6 +1,6 @@
 use crate::database;
 use crate::models::ClipboardItem;
-use crate::encryption;
+use crate::security;
 
 #[tauri::command]
 pub fn get_clipboard_history() -> Vec<ClipboardItem> {
@@ -38,12 +38,12 @@ pub fn get_clipboard_history() -> Vec<ClipboardItem> {
         
         // Eğer veri şifrelenmişse çöz
         if is_encrypted {
-            if let Ok(decrypted_content) = encryption::decrypt(&content) {
+            if let Ok(decrypted_content) = security::decrypt(&content) {
                 content = decrypted_content;
             }
             
             if let Some(ref img_data) = image_data {
-                if let Ok(decrypted_image) = encryption::decrypt(img_data) {
+                if let Ok(decrypted_image) = security::decrypt(img_data) {
                     image_data = Some(decrypted_image);
                 }
             }

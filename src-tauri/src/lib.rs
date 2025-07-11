@@ -2,7 +2,7 @@ pub mod models;
 pub mod database;
 pub mod clipboard;
 pub mod commands;
-pub mod encryption;
+pub mod security;
 
 use tauri::{
     Manager, WindowEvent,
