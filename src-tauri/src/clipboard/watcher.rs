@@ -1,5 +1,6 @@
 use crate::database;
 use crate::models::ClipboardUpdateEvent;
+use crate::encryption;
 use arboard::Clipboard;
 use base64::{Engine as _, engine::general_purpose};
 use image::ImageBuffer;
@@ -20,10 +21,19 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                     if current != last_clip_text && !current.trim().is_empty() {
                         println!("New text content: {}", current);
 
+                        // İçeriği şifrele
+                        let encrypted_content = match encryption::encrypt(&current) {
+                            Ok(encrypted) => encrypted,
+                            Err(e) => {
+                                eprintln!("Failed to encrypt content: {}", e);
+                                current.clone()
+                            }
+                        };
+
                         // Veritabanına ekle
                         let result = conn.execute(
-                            "INSERT INTO clipboard_history (content, content_type, created_at) VALUES (?1, 'text', datetime('now', 'localtime'))",
-                            [&current],
+                            "INSERT INTO clipboard_history (content, content_type, created_at, is_encrypted) VALUES (?1, 'text', datetime('now', 'localtime'), 1)",
+                            [&encrypted_content],
                         );
 
                         if result.is_ok() {
@@ -77,10 +87,27 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                         let base64_image = general_purpose::STANDARD.encode(&png_data);
                         let content = format!("Image ({}x{})", image.width, image.height);
 
+                        // İçeriği ve resim verisini şifrele
+                        let encrypted_content = match encryption::encrypt(&content) {
+                            Ok(encrypted) => encrypted,
+                            Err(e) => {
+                                eprintln!("Failed to encrypt content: {}", e);
+                                content.clone()
+                            }
+                        };
+
+                        let encrypted_image = match encryption::encrypt(&base64_image) {
+                            Ok(encrypted) => encrypted,
+                            Err(e) => {
+                                eprintln!("Failed to encrypt image data: {}", e);
+                                base64_image.clone()
+                            }
+                        };
+
                         // Veritabanına ekle
                         let result = conn.execute(
-                            "INSERT INTO clipboard_history (content, content_type, image_data, created_at) VALUES (?1, 'image', ?2, datetime('now', 'localtime'))",
-                            [&content, &base64_image],
+                            "INSERT INTO clipboard_history (content, content_type, image_data, created_at, is_encrypted) VALUES (?1, 'image', ?2, datetime('now', 'localtime'), 1)",
+                            [&encrypted_content, &encrypted_image],
                         );
 
                         if result.is_ok() {

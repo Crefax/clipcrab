@@ -28,3 +28,7 @@ rusqlite = { version = "0.36.0", features = ["bundled"] }
 dirs = "5"
 base64 = "0.21"
 image = "0.24"
+aes-gcm = "0.10"
+rand = "0.8"
+uuid = { version = "1.0", features = ["v4"] }
+lazy_static = "1.4"

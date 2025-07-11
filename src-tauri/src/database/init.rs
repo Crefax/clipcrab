@@ -13,7 +13,7 @@ pub fn init_db() -> Connection {
     let db_path = get_db_path();
     let conn = Connection::open(db_path).expect("Failed to open database");
 
-    // Ana tabloyu oluştur
+    // Ana tabloyu oluştur (şifrelenmiş içerik için)
     conn.execute(
         "CREATE TABLE IF NOT EXISTS clipboard_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,7 +21,8 @@ pub fn init_db() -> Connection {
             content_type TEXT DEFAULT 'text',
             image_data TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            pinned INTEGER DEFAULT 0
+            pinned INTEGER DEFAULT 0,
+            is_encrypted INTEGER DEFAULT 1
         )",
         [],
     )
