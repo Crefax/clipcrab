@@ -6,7 +6,8 @@
   },
   "header": {
     "refresh": "Refresh",
-    "clear_all": "Clear All"
+    "clear_all": "Clear All",
+    "settings": "Settings"
   },
   "search": {
     "placeholder": "Search clipboard history...",
@@ -70,5 +71,55 @@
     "copy_failed": "Copy failed!",
     "delete_failed": "Delete failed!",
     "clear_failed": "Clear failed!"
+  },
+  "navigation": {
+    "history": "History",
+    "importexport": "Import / Export",
+    "settings": "Settings"
+  },
+  "settings": {
+    "language": {
+      "title": "Language Settings",
+      "label": "Language"
+    },
+    "privacy": {
+      "title": "Privacy & Security",
+      "auto_start": "Auto-start with system",
+      "encrypt_data": "Encrypt clipboard data"
+    },
+    "general": {
+      "title": "General Settings",
+      "max_history": "Maximum history items",
+      "auto_clear": "Auto-clear old items (days)"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "show_notifications": "Show notifications",
+      "sound_enabled": "Enable sound effects"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "compact_mode": "Compact mode"
+    },
+    "actions": {
+      "save": "Save Settings",
+      "reset": "Reset to Default",
+      "saved": "Settings saved successfully!",
+      "reset_confirm": "Are you sure you want to reset all settings to default?",
+      "reset_success": "Settings have been reset to default"
+    },
+    "theme_options": {
+      "auto": "Auto (System)",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "clear_options": {
+      "never": "Never",
+      "7_days": "7 days",
+      "30_days": "30 days",
+      "90_days": "90 days",
+      "365_days": "1 year"
+    }
   }
 } 

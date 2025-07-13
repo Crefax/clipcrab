@@ -28,10 +28,6 @@
               <i class="fas fa-trash"></i>
               <span>Clear</span>
             </button>
-            <button id="settings-btn" class="btn btn-secondary">
-              <i class="fas fa-cog"></i>
-              <span>Settings</span>
-            </button>
           </div>
         </div>
       </header>
@@ -42,6 +38,10 @@
           <button id="history-tab" class="nav-tab active" data-page="history">
             <i class="fas fa-history"></i>
             <span>History</span>
+          </button>
+          <button id="importexport-tab" class="nav-tab" data-page="importexport">
+            <i class="fas fa-file-import"></i>
+            <span>Import / Export</span>
           </button>
           <button id="settings-tab" class="nav-tab" data-page="settings">
             <i class="fas fa-cog"></i>
@@ -102,6 +102,17 @@
         </main>
       </div>
 
+      <!-- Import/Export Page -->
+      <div id="importexport-page" class="page">
+        <main class="content">
+          <div class="importexport-container">
+            <h2><i class="fas fa-file-import"></i> Import / Export</h2>
+            <p>Clipboard geçmişinizi dışa aktarabilir veya yedekten içe aktarabilirsiniz.</p>
+            <!-- Buraya ileride butonlar ve fonksiyonlar eklenebilir -->
+          </div>
+        </main>
+      </div>
+
       <!-- Settings Page -->
       <div id="settings-page" class="page">
         <main class="content">
@@ -109,7 +120,6 @@
             <div class="settings-section">
               <h2><i class="fas fa-globe"></i> Language Settings</h2>
               <div class="setting-item">
-                <label for="language-select">Language</label>
                 <div class="language-dropdown">
                   <button id="language-toggle" class="language-toggle">
                     <i class="fas fa-globe"></i>
@@ -129,24 +139,6 @@
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div class="settings-section">
-              <h2><i class="fas fa-shield-alt"></i> Privacy & Security</h2>
-              <div class="setting-item">
-                <label for="auto-start">
-                  <input type="checkbox" id="auto-start" />
-                  <span>Auto-start with system</span>
-                </label>
-                <p class="setting-description">Automatically start ClipCrab when your computer boots up</p>
-              </div>
-              <div class="setting-item">
-                <label for="encrypt-data">
-                  <input type="checkbox" id="encrypt-data" />
-                  <span>Encrypt clipboard data</span>
-                </label>
-                <p class="setting-description">Encrypt your clipboard history for enhanced security</p>
               </div>
             </div>
 
@@ -239,7 +231,6 @@
     <div id="toast" class="toast"></div>
 
     <script src="locales/i18n.js"></script>
-    <script src="script/autostart.js"></script>
     <script type="module" src="script/main.js"></script>
   </body>
 </html>

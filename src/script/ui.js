@@ -16,6 +16,7 @@ export const elements = {
   toast: document.getElementById("toast"),
   // Navigation elements
   historyTab: document.getElementById("history-tab"),
+  importexportTab: document.getElementById("importexport-tab"),
   settingsTab: document.getElementById("settings-tab"),
   historyPage: document.getElementById("history-page"),
   settingsPage: document.getElementById("settings-page"),
@@ -26,8 +27,6 @@ export const elements = {
   saveSettingsBtn: document.getElementById("save-settings"),
   resetSettingsBtn: document.getElementById("reset-settings"),
   // Settings form elements
-  autoStartCheckbox: document.getElementById("auto-start"),
-  encryptDataCheckbox: document.getElementById("encrypt-data"),
   maxHistorySelect: document.getElementById("max-history"),
   autoClearSelect: document.getElementById("auto-clear"),
   showNotificationsCheckbox: document.getElementById("show-notifications"),
@@ -74,9 +73,10 @@ export function initI18n() {
 // Navigasyon sistemi
 export function initNavigation() {
   // Tab click handlers
-  elements.historyTab.addEventListener('click', () => switchPage('history'));
-  elements.settingsTab.addEventListener('click', () => switchPage('settings'));
-  elements.settingsBtn.addEventListener('click', () => switchPage('settings'));
+  if (elements.historyTab) elements.historyTab.addEventListener('click', () => switchPage('history'));
+  if (elements.importexportTab) elements.importexportTab.addEventListener('click', () => switchPage('importexport'));
+  if (elements.settingsTab) elements.settingsTab.addEventListener('click', () => switchPage('settings'));
+  if (elements.settingsBtn) elements.settingsBtn.addEventListener('click', () => switchPage('settings'));
 }
 
 // Sayfa değiştirme
@@ -171,14 +171,7 @@ export function initSettings() {
 // Ayarları yükle
 export function loadSettings() {
   const settings = getStoredSettings();
-  
   // Form elemanlarını doldur
-  if (elements.autoStartCheckbox) {
-    elements.autoStartCheckbox.checked = settings.autoStart || false;
-  }
-  if (elements.encryptDataCheckbox) {
-    elements.encryptDataCheckbox.checked = settings.encryptData || false;
-  }
   if (elements.maxHistorySelect) {
     elements.maxHistorySelect.value = settings.maxHistory || '500';
   }
@@ -203,8 +196,6 @@ export function loadSettings() {
 export async function saveSettings() {
   try {
     const settings = {
-      autoStart: elements.autoStartCheckbox?.checked || false,
-      encryptData: elements.encryptDataCheckbox?.checked || false,
       maxHistory: elements.maxHistorySelect?.value || '500',
       autoClear: elements.autoClearSelect?.value || 'never',
       showNotifications: elements.showNotificationsCheckbox?.checked !== false,
@@ -212,20 +203,15 @@ export async function saveSettings() {
       theme: elements.themeSelect?.value || 'auto',
       compactMode: elements.compactModeCheckbox?.checked || false
     };
-    
     // LocalStorage'a kaydet
     localStorage.setItem('clipcrab_settings', JSON.stringify(settings));
-    
     // Tema değişikliğini uygula
     applyTheme(settings.theme);
-    
     // Kompakt mod değişikliğini uygula
     applyCompactMode(settings.compactMode);
-    
     // Başarı mesajı göster
     const savedText = await window.i18n.t('settings.actions.saved');
     showToast(savedText, 'success');
-    
     console.log('Settings saved:', settings);
   } catch (error) {
     console.error('Error saving settings:', error);
@@ -241,11 +227,8 @@ export async function resetSettings() {
     if (!confirm(resetConfirmText)) {
       return;
     }
-    
     // Varsayılan ayarları yükle
     const defaultSettings = {
-      autoStart: false,
-      encryptData: false,
       maxHistory: '500',
       autoClear: 'never',
       showNotifications: true,
@@ -253,21 +236,16 @@ export async function resetSettings() {
       theme: 'auto',
       compactMode: false
     };
-    
     // LocalStorage'dan sil
     localStorage.removeItem('clipcrab_settings');
-    
     // Form elemanlarını sıfırla
     loadSettings();
-    
     // Tema ve kompakt modu sıfırla
     applyTheme('auto');
     applyCompactMode(false);
-    
     // Başarı mesajı göster
     const resetSuccessText = await window.i18n.t('settings.actions.reset_success');
     showToast(resetSuccessText, 'success');
-    
     console.log('Settings reset to default');
   } catch (error) {
     console.error('Error resetting settings:', error);
@@ -322,32 +300,33 @@ export async function updatePageTexts() {
   await waitForI18n();
   
   // Header
-  document.querySelector('.logo h1').textContent = await window.i18n.t('app.title');
-  document.querySelector('#refresh span').textContent = await window.i18n.t('header.refresh');
-  document.querySelector('#clear-all span').textContent = await window.i18n.t('header.clear_all');
-  document.querySelector('#settings-btn span').textContent = await window.i18n.t('header.settings');
+  if (document.querySelector('.logo h1')) document.querySelector('.logo h1').textContent = await window.i18n.t('app.title');
+  if (document.querySelector('#refresh span')) document.querySelector('#refresh span').textContent = await window.i18n.t('header.refresh');
+  if (document.querySelector('#clear-all span')) document.querySelector('#clear-all span').textContent = await window.i18n.t('header.clear_all');
+  if (document.querySelector('#settings-btn span')) document.querySelector('#settings-btn span').textContent = await window.i18n.t('header.settings');
   
   // Navigation
-  document.querySelector('#history-tab span').textContent = await window.i18n.t('navigation.history');
-  document.querySelector('#settings-tab span').textContent = await window.i18n.t('navigation.settings');
+  if (document.querySelector('#history-tab span')) document.querySelector('#history-tab span').textContent = await window.i18n.t('navigation.history');
+  if (document.querySelector('#importexport-tab span')) document.querySelector('#importexport-tab span').textContent = await window.i18n.t('navigation.importexport');
+  if (document.querySelector('#settings-tab span')) document.querySelector('#settings-tab span').textContent = await window.i18n.t('navigation.settings');
   
   // Search
-  document.querySelector('#search-input').placeholder = await window.i18n.t('search.placeholder');
+  if (document.querySelector('#search-input')) document.querySelector('#search-input').placeholder = await window.i18n.t('search.placeholder');
   
   // Stats
-  document.querySelector('.stat-item:nth-child(1) label').textContent = await window.i18n.t('stats.total_items');
-  document.querySelector('.stat-item:nth-child(2) label').textContent = await window.i18n.t('stats.last_updated');
+  if (document.querySelector('.stat-item:nth-child(1) label')) document.querySelector('.stat-item:nth-child(1) label').textContent = await window.i18n.t('stats.total_items');
+  if (document.querySelector('.stat-item:nth-child(2) label')) document.querySelector('.stat-item:nth-child(2) label').textContent = await window.i18n.t('stats.last_updated');
   
   // Loading
-  document.querySelector('#loading span').textContent = await window.i18n.t('loading.message');
+  if (document.querySelector('#loading span')) document.querySelector('#loading span').textContent = await window.i18n.t('loading.message');
   
   // Empty state
-  document.querySelector('#empty-state h3').textContent = await window.i18n.t('empty_state.title');
-  document.querySelector('#empty-state p').textContent = await window.i18n.t('empty_state.message');
+  if (document.querySelector('#empty-state h3')) document.querySelector('#empty-state h3').textContent = await window.i18n.t('empty_state.title');
+  if (document.querySelector('#empty-state p')) document.querySelector('#empty-state p').textContent = await window.i18n.t('empty_state.message');
   
   // No results
-  document.querySelector('#no-results h3').textContent = await window.i18n.t('no_results.title');
-  document.querySelector('#no-results p').textContent = await window.i18n.t('no_results.message');
+  if (document.querySelector('#no-results h3')) document.querySelector('#no-results h3').textContent = await window.i18n.t('no_results.title');
+  if (document.querySelector('#no-results p')) document.querySelector('#no-results p').textContent = await window.i18n.t('no_results.message');
   
   // Settings page texts
   updateSettingsTexts();
@@ -387,8 +366,8 @@ export async function updateSettingsTexts() {
   }
   
   // Action buttons
-  document.querySelector('#save-settings span').textContent = await window.i18n.t('settings.actions.save');
-  document.querySelector('#reset-settings span').textContent = await window.i18n.t('settings.actions.reset');
+  if (document.querySelector('#save-settings span')) document.querySelector('#save-settings span').textContent = await window.i18n.t('settings.actions.save');
+  if (document.querySelector('#reset-settings span')) document.querySelector('#reset-settings span').textContent = await window.i18n.t('settings.actions.reset');
 }
 
 // Global olarak erişilebilir yap

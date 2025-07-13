@@ -6,7 +6,13 @@
   },
   "header": {
     "refresh": "Yenile",
-    "clear_all": "Tümünü Temizle"
+    "clear_all": "Tümünü Temizle",
+    "settings": "Ayarlar"
+  },
+  "navigation": {
+    "history": "Geçmiş",
+    "importexport": "İçe/Dışa Aktar",
+    "settings": "Ayarlar"
   },
   "search": {
     "placeholder": "Clipboard geçmişinde ara...",
@@ -66,9 +72,55 @@
   "loading": {
     "message": "Yükleniyor..."
   },
+  "settings": {
+    "language": {
+      "title": "Dil Ayarları",
+      "label": "Dil"
+    },
+    "privacy": {
+      "title": "Gizlilik ve Güvenlik",
+      "auto_start": "Sistem ile otomatik başlat",
+      "encrypt_data": "Clipboard verilerini şifrele"
+    },
+    "general": {
+      "title": "Genel Ayarlar",
+      "max_history": "Maksimum geçmiş öğesi",
+      "auto_clear": "Eski öğeleri otomatik temizle (gün)"
+    },
+    "notifications": {
+      "title": "Bildirimler",
+      "show_notifications": "Bildirimleri göster",
+      "sound_enabled": "Ses efektlerini etkinleştir"
+    },
+    "appearance": {
+      "title": "Görünüm",
+      "theme": "Tema",
+      "compact_mode": "Kompakt mod"
+    },
+    "actions": {
+      "save": "Ayarları Kaydet",
+      "reset": "Varsayılana Sıfırla",
+      "saved": "Ayarlar başarıyla kaydedildi!",
+      "reset_confirm": "Tüm ayarları varsayılana sıfırlamak istediğinizden emin misiniz?",
+      "reset_success": "Ayarlar varsayılana sıfırlandı"
+    },
+    "theme_options": {
+      "auto": "Otomatik (Sistem)",
+      "light": "Açık",
+      "dark": "Koyu"
+    },
+    "clear_options": {
+      "never": "Asla",
+      "7_days": "7 gün",
+      "30_days": "30 gün",
+      "90_days": "90 gün",
+      "365_days": "1 yıl"
+    }
+  },
   "errors": {
     "copy_failed": "Kopyalama başarısız!",
     "delete_failed": "Silme başarısız!",
-    "clear_failed": "Temizleme başarısız!"
+    "clear_failed": "Temizleme başarısız!",
+    "save_settings_failed": "Ayarlar kaydedilemedi!"
   }
 } 
