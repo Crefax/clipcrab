@@ -13,7 +13,27 @@ export const elements = {
   loading: document.getElementById("loading"),
   emptyState: document.getElementById("empty-state"),
   noResults: document.getElementById("no-results"),
-  toast: document.getElementById("toast")
+  toast: document.getElementById("toast"),
+  // Navigation elements
+  historyTab: document.getElementById("history-tab"),
+  settingsTab: document.getElementById("settings-tab"),
+  historyPage: document.getElementById("history-page"),
+  settingsPage: document.getElementById("settings-page"),
+  settingsBtn: document.getElementById("settings-btn"),
+  // Settings elements
+  languageToggle: document.getElementById("language-toggle"),
+  languageMenu: document.getElementById("language-menu"),
+  saveSettingsBtn: document.getElementById("save-settings"),
+  resetSettingsBtn: document.getElementById("reset-settings"),
+  // Settings form elements
+  autoStartCheckbox: document.getElementById("auto-start"),
+  encryptDataCheckbox: document.getElementById("encrypt-data"),
+  maxHistorySelect: document.getElementById("max-history"),
+  autoClearSelect: document.getElementById("auto-clear"),
+  showNotificationsCheckbox: document.getElementById("show-notifications"),
+  soundEnabledCheckbox: document.getElementById("sound-enabled"),
+  themeSelect: document.getElementById("theme-select"),
+  compactModeCheckbox: document.getElementById("compact-mode")
 };
 
 // Dil sistemi
@@ -43,6 +63,258 @@ export function initI18n() {
   
   // Sayfa metinlerini güncelle
   updatePageTexts();
+  
+  // Navigasyon sistemini başlat
+  initNavigation();
+  
+  // Ayarlar sistemini başlat
+  initSettings();
+}
+
+// Navigasyon sistemi
+export function initNavigation() {
+  // Tab click handlers
+  elements.historyTab.addEventListener('click', () => switchPage('history'));
+  elements.settingsTab.addEventListener('click', () => switchPage('settings'));
+  elements.settingsBtn.addEventListener('click', () => switchPage('settings'));
+}
+
+// Sayfa değiştirme
+export function switchPage(pageName) {
+  // Tüm sayfaları gizle
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.remove('active');
+  });
+  
+  // Tüm tabları pasif yap
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  
+  // İlgili sayfayı ve tabı aktif yap
+  const targetPage = document.getElementById(`${pageName}-page`);
+  const targetTab = document.getElementById(`${pageName}-tab`);
+  
+  if (targetPage) targetPage.classList.add('active');
+  if (targetTab) targetTab.classList.add('active');
+  
+  // Sayfa değiştiğinde gerekli işlemleri yap
+  if (pageName === 'history') {
+    // History sayfasına geçerken clipboard geçmişini yenile
+    loadClipboardHistory();
+  } else if (pageName === 'settings') {
+    // Settings sayfasına geçerken ayarları yükle
+    loadSettings();
+  }
+}
+
+// Ayarlar sistemi
+export function initSettings() {
+  // Dil dropdown
+  if (elements.languageToggle && elements.languageMenu) {
+    elements.languageToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dropdown = elements.languageToggle.closest('.language-dropdown');
+      dropdown.classList.toggle('open');
+    });
+    
+    // Dil seçenekleri
+    const options = elements.languageMenu.querySelectorAll('.language-option');
+    options.forEach(option => {
+      option.addEventListener('click', function() {
+        const lang = this.dataset.lang;
+        console.log('Language selected:', lang);
+        
+        // Dil değiştir
+        if (window.i18n && window.i18n.setLanguage) {
+          window.i18n.setLanguage(lang);
+        } else {
+          // Fallback: sayfayı yenile
+          localStorage.setItem('language', lang);
+          window.location.reload();
+        }
+        
+        // Dropdown'ı kapat
+        const dropdown = elements.languageToggle.closest('.language-dropdown');
+        dropdown.classList.remove('open');
+      });
+    });
+    
+    // Dışarı tıklayınca kapat
+    document.addEventListener('click', function(e) {
+      const dropdown = elements.languageToggle.closest('.language-dropdown');
+      if (dropdown && !dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+      }
+    });
+    
+    // ESC ile kapat
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const dropdown = elements.languageToggle.closest('.language-dropdown');
+        if (dropdown) dropdown.classList.remove('open');
+      }
+    });
+  }
+  
+  // Ayarları kaydet
+  if (elements.saveSettingsBtn) {
+    elements.saveSettingsBtn.addEventListener('click', saveSettings);
+  }
+  
+  // Ayarları sıfırla
+  if (elements.resetSettingsBtn) {
+    elements.resetSettingsBtn.addEventListener('click', resetSettings);
+  }
+}
+
+// Ayarları yükle
+export function loadSettings() {
+  const settings = getStoredSettings();
+  
+  // Form elemanlarını doldur
+  if (elements.autoStartCheckbox) {
+    elements.autoStartCheckbox.checked = settings.autoStart || false;
+  }
+  if (elements.encryptDataCheckbox) {
+    elements.encryptDataCheckbox.checked = settings.encryptData || false;
+  }
+  if (elements.maxHistorySelect) {
+    elements.maxHistorySelect.value = settings.maxHistory || '500';
+  }
+  if (elements.autoClearSelect) {
+    elements.autoClearSelect.value = settings.autoClear || 'never';
+  }
+  if (elements.showNotificationsCheckbox) {
+    elements.showNotificationsCheckbox.checked = settings.showNotifications !== false;
+  }
+  if (elements.soundEnabledCheckbox) {
+    elements.soundEnabledCheckbox.checked = settings.soundEnabled || false;
+  }
+  if (elements.themeSelect) {
+    elements.themeSelect.value = settings.theme || 'auto';
+  }
+  if (elements.compactModeCheckbox) {
+    elements.compactModeCheckbox.checked = settings.compactMode || false;
+  }
+}
+
+// Ayarları kaydet
+export async function saveSettings() {
+  try {
+    const settings = {
+      autoStart: elements.autoStartCheckbox?.checked || false,
+      encryptData: elements.encryptDataCheckbox?.checked || false,
+      maxHistory: elements.maxHistorySelect?.value || '500',
+      autoClear: elements.autoClearSelect?.value || 'never',
+      showNotifications: elements.showNotificationsCheckbox?.checked !== false,
+      soundEnabled: elements.soundEnabledCheckbox?.checked || false,
+      theme: elements.themeSelect?.value || 'auto',
+      compactMode: elements.compactModeCheckbox?.checked || false
+    };
+    
+    // LocalStorage'a kaydet
+    localStorage.setItem('clipcrab_settings', JSON.stringify(settings));
+    
+    // Tema değişikliğini uygula
+    applyTheme(settings.theme);
+    
+    // Kompakt mod değişikliğini uygula
+    applyCompactMode(settings.compactMode);
+    
+    // Başarı mesajı göster
+    const savedText = await window.i18n.t('settings.actions.saved');
+    showToast(savedText, 'success');
+    
+    console.log('Settings saved:', settings);
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    const errorText = await window.i18n.t('errors.save_settings_failed');
+    showToast(errorText, 'error');
+  }
+}
+
+// Ayarları sıfırla
+export async function resetSettings() {
+  try {
+    const resetConfirmText = await window.i18n.t('settings.actions.reset_confirm');
+    if (!confirm(resetConfirmText)) {
+      return;
+    }
+    
+    // Varsayılan ayarları yükle
+    const defaultSettings = {
+      autoStart: false,
+      encryptData: false,
+      maxHistory: '500',
+      autoClear: 'never',
+      showNotifications: true,
+      soundEnabled: false,
+      theme: 'auto',
+      compactMode: false
+    };
+    
+    // LocalStorage'dan sil
+    localStorage.removeItem('clipcrab_settings');
+    
+    // Form elemanlarını sıfırla
+    loadSettings();
+    
+    // Tema ve kompakt modu sıfırla
+    applyTheme('auto');
+    applyCompactMode(false);
+    
+    // Başarı mesajı göster
+    const resetSuccessText = await window.i18n.t('settings.actions.reset_success');
+    showToast(resetSuccessText, 'success');
+    
+    console.log('Settings reset to default');
+  } catch (error) {
+    console.error('Error resetting settings:', error);
+  }
+}
+
+// Kaydedilmiş ayarları al
+export function getStoredSettings() {
+  try {
+    const stored = localStorage.getItem('clipcrab_settings');
+    return stored ? JSON.parse(stored) : {};
+  } catch (error) {
+    console.error('Error loading stored settings:', error);
+    return {};
+  }
+}
+
+// Tema uygula
+export function applyTheme(theme) {
+  const root = document.documentElement;
+  
+  // Mevcut tema sınıflarını kaldır
+  root.classList.remove('theme-light', 'theme-dark');
+  
+  if (theme === 'light') {
+    root.classList.add('theme-light');
+  } else if (theme === 'dark') {
+    root.classList.add('theme-dark');
+  } else {
+    // Auto tema - sistem temasını kullan
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark) {
+      root.classList.add('theme-dark');
+    } else {
+      root.classList.add('theme-light');
+    }
+  }
+}
+
+// Kompakt mod uygula
+export function applyCompactMode(compact) {
+  const appContainer = document.querySelector('.app-container');
+  if (compact) {
+    appContainer.classList.add('compact-mode');
+  } else {
+    appContainer.classList.remove('compact-mode');
+  }
 }
 
 // Sayfa metinlerini güncelle
@@ -53,6 +325,11 @@ export async function updatePageTexts() {
   document.querySelector('.logo h1').textContent = await window.i18n.t('app.title');
   document.querySelector('#refresh span').textContent = await window.i18n.t('header.refresh');
   document.querySelector('#clear-all span').textContent = await window.i18n.t('header.clear_all');
+  document.querySelector('#settings-btn span').textContent = await window.i18n.t('header.settings');
+  
+  // Navigation
+  document.querySelector('#history-tab span').textContent = await window.i18n.t('navigation.history');
+  document.querySelector('#settings-tab span').textContent = await window.i18n.t('navigation.settings');
   
   // Search
   document.querySelector('#search-input').placeholder = await window.i18n.t('search.placeholder');
@@ -72,6 +349,9 @@ export async function updatePageTexts() {
   document.querySelector('#no-results h3').textContent = await window.i18n.t('no_results.title');
   document.querySelector('#no-results p').textContent = await window.i18n.t('no_results.message');
   
+  // Settings page texts
+  updateSettingsTexts();
+  
   // Mevcut clipboard öğelerini yeniden render et
   await renderHistory();
   if (window.i18n && window.i18n.updateCurrentLanguageUI) {
@@ -79,8 +359,41 @@ export async function updatePageTexts() {
   }
 }
 
+// Ayarlar sayfası metinlerini güncelle
+export async function updateSettingsTexts() {
+  await waitForI18n();
+  
+  // Settings sections
+  const sections = document.querySelectorAll('.settings-section h2');
+  if (sections.length >= 5) {
+    sections[0].innerHTML = `<i class="fas fa-globe"></i> ${await window.i18n.t('settings.language.title')}`;
+    sections[1].innerHTML = `<i class="fas fa-shield-alt"></i> ${await window.i18n.t('settings.privacy.title')}`;
+    sections[2].innerHTML = `<i class="fas fa-sliders-h"></i> ${await window.i18n.t('settings.general.title')}`;
+    sections[3].innerHTML = `<i class="fas fa-bell"></i> ${await window.i18n.t('settings.notifications.title')}`;
+    sections[4].innerHTML = `<i class="fas fa-palette"></i> ${await window.i18n.t('settings.appearance.title')}`;
+  }
+  
+  // Settings labels
+  const labels = document.querySelectorAll('.setting-item label span');
+  if (labels.length >= 8) {
+    labels[0].textContent = await window.i18n.t('settings.privacy.auto_start');
+    labels[1].textContent = await window.i18n.t('settings.privacy.encrypt_data');
+    labels[2].textContent = await window.i18n.t('settings.general.max_history');
+    labels[3].textContent = await window.i18n.t('settings.general.auto_clear');
+    labels[4].textContent = await window.i18n.t('settings.notifications.show_notifications');
+    labels[5].textContent = await window.i18n.t('settings.notifications.sound_enabled');
+    labels[6].textContent = await window.i18n.t('settings.appearance.theme');
+    labels[7].textContent = await window.i18n.t('settings.appearance.compact_mode');
+  }
+  
+  // Action buttons
+  document.querySelector('#save-settings span').textContent = await window.i18n.t('settings.actions.save');
+  document.querySelector('#reset-settings span').textContent = await window.i18n.t('settings.actions.reset');
+}
+
 // Global olarak erişilebilir yap
 window.updatePageTexts = updatePageTexts;
+window.switchPage = switchPage;
 
 // UI Functions
 export async function createHistoryItem(item, index) {

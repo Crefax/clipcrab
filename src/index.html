@@ -20,25 +20,6 @@
             <h1>ClipCrab</h1>
           </div>
           <div class="header-actions">
-            <div class="language-dropdown">
-              <button id="language-toggle" class="language-toggle">
-                <i class="fas fa-globe"></i>
-                <span class="current-language-label">Language</span>
-                <i class="fas fa-chevron-down"></i>
-              </button>
-              <div id="language-menu" class="language-menu">
-                <div class="language-option" data-lang="tr">
-                  <span class="flag">🇹🇷</span>
-                  <span class="name">Türkçe</span>
-                  <i class="fas fa-check"></i>
-                </div>
-                <div class="language-option" data-lang="en">
-                  <span class="flag">🇺🇸</span>
-                  <span class="name">English</span>
-                  <i class="fas fa-check"></i>
-                </div>
-              </div>
-            </div>
             <button id="refresh" class="btn btn-primary">
               <i class="fas fa-sync-alt"></i>
               <span>Refresh</span>
@@ -47,58 +28,202 @@
               <i class="fas fa-trash"></i>
               <span>Clear</span>
             </button>
+            <button id="settings-btn" class="btn btn-secondary">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </button>
           </div>
         </div>
       </header>
 
-      <!-- Search Bar -->
-      <div class="search-container">
-        <div class="search-box">
-          <i class="fas fa-search search-icon"></i>
-          <input type="text" id="search-input" placeholder="Search clipboard history..." />
-          <button id="clear-search" class="clear-search">
-            <i class="fas fa-times"></i>
+      <!-- Navigation -->
+      <nav class="navigation">
+        <div class="nav-tabs">
+          <button id="history-tab" class="nav-tab active" data-page="history">
+            <i class="fas fa-history"></i>
+            <span>History</span>
+          </button>
+          <button id="settings-tab" class="nav-tab" data-page="settings">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
           </button>
         </div>
+      </nav>
+
+      <!-- History Page -->
+      <div id="history-page" class="page active">
+        <!-- Search Bar -->
+        <div class="search-container">
+          <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-input" placeholder="Search clipboard history..." />
+            <button id="clear-search" class="clear-search">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-container">
+          <div class="stat-item">
+            <i class="fas fa-list"></i>
+            <span id="total-items">0</span>
+            <label>Total</label>
+          </div>
+          <div class="stat-item">
+            <i class="fas fa-clock"></i>
+            <span id="last-updated">--</span>
+            <label>Last Updated</label>
+          </div>
+        </div>
+
+        <!-- Content Area -->
+        <main class="content">
+          <div class="history-container">
+            <div id="loading" class="loading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Loading...</span>
+            </div>
+            
+            <div id="empty-state" class="empty-state" style="display: none;">
+              <i class="fas fa-clipboard"></i>
+              <h3>No clipboard history yet</h3>
+              <p>Your copied items will appear here</p>
+            </div>
+
+            <div id="no-results" class="empty-state" style="display: none;">
+              <i class="fas fa-search"></i>
+              <h3>No results found</h3>
+              <p>Try changing your search criteria</p>
+            </div>
+
+            <ul id="history-list" class="history-list"></ul>
+          </div>
+        </main>
       </div>
 
-      <!-- Stats -->
-      <div class="stats-container">
-        <div class="stat-item">
-          <i class="fas fa-list"></i>
-          <span id="total-items">0</span>
-          <label>Total</label>
-        </div>
-        <div class="stat-item">
-          <i class="fas fa-clock"></i>
-          <span id="last-updated">--</span>
-          <label>Last Updated</label>
-        </div>
+      <!-- Settings Page -->
+      <div id="settings-page" class="page">
+        <main class="content">
+          <div class="settings-container">
+            <div class="settings-section">
+              <h2><i class="fas fa-globe"></i> Language Settings</h2>
+              <div class="setting-item">
+                <label for="language-select">Language</label>
+                <div class="language-dropdown">
+                  <button id="language-toggle" class="language-toggle">
+                    <i class="fas fa-globe"></i>
+                    <span class="current-language-label">Language</span>
+                    <i class="fas fa-chevron-down"></i>
+                  </button>
+                  <div id="language-menu" class="language-menu">
+                    <div class="language-option" data-lang="tr">
+                      <span class="flag">🇹🇷</span>
+                      <span class="name">Türkçe</span>
+                      <i class="fas fa-check"></i>
+                    </div>
+                    <div class="language-option" data-lang="en">
+                      <span class="flag">🇺🇸</span>
+                      <span class="name">English</span>
+                      <i class="fas fa-check"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h2><i class="fas fa-shield-alt"></i> Privacy & Security</h2>
+              <div class="setting-item">
+                <label for="auto-start">
+                  <input type="checkbox" id="auto-start" />
+                  <span>Auto-start with system</span>
+                </label>
+                <p class="setting-description">Automatically start ClipCrab when your computer boots up</p>
+              </div>
+              <div class="setting-item">
+                <label for="encrypt-data">
+                  <input type="checkbox" id="encrypt-data" />
+                  <span>Encrypt clipboard data</span>
+                </label>
+                <p class="setting-description">Encrypt your clipboard history for enhanced security</p>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h2><i class="fas fa-sliders-h"></i> General Settings</h2>
+              <div class="setting-item">
+                <label for="max-history">Maximum history items</label>
+                <select id="max-history">
+                  <option value="100">100 items</option>
+                  <option value="250">250 items</option>
+                  <option value="500">500 items</option>
+                  <option value="1000">1000 items</option>
+                  <option value="unlimited">Unlimited</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label for="auto-clear">Auto-clear old items</label>
+                <select id="auto-clear">
+                  <option value="never">Never</option>
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                  <option value="90">90 days</option>
+                  <option value="365">1 year</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h2><i class="fas fa-bell"></i> Notifications</h2>
+              <div class="setting-item">
+                <label for="show-notifications">
+                  <input type="checkbox" id="show-notifications" />
+                  <span>Show notifications</span>
+                </label>
+                <p class="setting-description">Show notifications when items are copied or deleted</p>
+              </div>
+              <div class="setting-item">
+                <label for="sound-enabled">
+                  <input type="checkbox" id="sound-enabled" />
+                  <span>Enable sound effects</span>
+                </label>
+                <p class="setting-description">Play sounds for clipboard operations</p>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <h2><i class="fas fa-palette"></i> Appearance</h2>
+              <div class="setting-item">
+                <label for="theme-select">Theme</label>
+                <select id="theme-select">
+                  <option value="auto">Auto (System)</option>
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </div>
+              <div class="setting-item">
+                <label for="compact-mode">
+                  <input type="checkbox" id="compact-mode" />
+                  <span>Compact mode</span>
+                </label>
+                <p class="setting-description">Use a more compact layout for history items</p>
+              </div>
+            </div>
+
+            <div class="settings-actions">
+              <button id="save-settings" class="btn btn-primary">
+                <i class="fas fa-save"></i>
+                <span>Save Settings</span>
+              </button>
+              <button id="reset-settings" class="btn btn-secondary">
+                <i class="fas fa-undo"></i>
+                <span>Reset to Default</span>
+              </button>
+            </div>
+          </div>
+        </main>
       </div>
-
-      <!-- Content Area -->
-      <main class="content">
-        <div class="history-container">
-          <div id="loading" class="loading">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Loading...</span>
-          </div>
-          
-          <div id="empty-state" class="empty-state" style="display: none;">
-            <i class="fas fa-clipboard"></i>
-            <h3>No clipboard history yet</h3>
-            <p>Your copied items will appear here</p>
-          </div>
-
-          <div id="no-results" class="empty-state" style="display: none;">
-            <i class="fas fa-search"></i>
-            <h3>No results found</h3>
-            <p>Try changing your search criteria</p>
-          </div>
-
-          <ul id="history-list" class="history-list"></ul>
-        </div>
-      </main>
 
       <!-- Footer -->
       <footer class="footer">
@@ -116,57 +241,5 @@
     <script src="locales/i18n.js"></script>
     <script src="script/autostart.js"></script>
     <script type="module" src="script/main.js"></script>
-    <script>
-      // Basit dil dropdown fonksiyonu
-      document.addEventListener('DOMContentLoaded', function() {
-        const dropdown = document.querySelector('.language-dropdown');
-        const toggle = document.getElementById('language-toggle');
-        const menu = document.getElementById('language-menu');
-        
-        if (dropdown && toggle && menu) {
-          // Toggle click
-          toggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            dropdown.classList.toggle('open');
-          });
-          
-          // Dil seçenekleri
-          const options = menu.querySelectorAll('.language-option');
-          options.forEach(option => {
-            option.addEventListener('click', function() {
-              const lang = this.dataset.lang;
-              console.log('Language selected:', lang);
-              
-              // Dil değiştir
-              if (window.i18n && window.i18n.setLanguage) {
-                window.i18n.setLanguage(lang);
-              } else {
-                // Fallback: sayfayı yenile
-                localStorage.setItem('language', lang);
-                window.location.reload();
-              }
-            });
-          });
-          
-          // Dışarı tıklayınca kapat
-          document.addEventListener('click', function(e) {
-            if (!dropdown.contains(e.target)) {
-              dropdown.classList.remove('open');
-            }
-          });
-          
-          // ESC ile kapat
-          document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-              dropdown.classList.remove('open');
-            }
-          });
-          
-          console.log('Language dropdown initialized');
-        } else {
-          console.error('Language dropdown elements not found');
-        }
-      });
-    </script>
   </body>
 </html>

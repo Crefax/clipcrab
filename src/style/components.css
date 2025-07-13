@@ -3,7 +3,7 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1rem 2rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px var(--shadow-color);
 }
 
 .header-content {
@@ -146,8 +146,8 @@
 /* Search */
 .search-container {
   padding: 1rem 2rem;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
+  background: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .search-box {
@@ -168,11 +168,12 @@
 #search-input {
   width: 100%;
   padding: 0.75rem 1rem 0.75rem 2.5rem;
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--background-color);
+  color: var(--text-primary);
 }
 
 #search-input:focus {
@@ -205,8 +206,8 @@
   display: flex;
   gap: 2rem;
   padding: 1rem 2rem;
-  background: white;
-  border-bottom: 1px solid #e9ecef;
+  background: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
   justify-content: center;
 }
 
@@ -225,12 +226,12 @@
 .stat-item span {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .stat-item label {
   font-size: 0.8rem;
-  color: #6c757d;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -244,15 +245,16 @@
 
 .history-item {
   padding: 1rem 2rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
-  background: white;
+  background: var(--background-color);
+  color: var(--text-primary);
 }
 
 .history-item:hover {
-  background: #f8f9fa;
+  background: var(--hover-color);
   transform: translateX(5px);
 }
 
@@ -275,7 +277,7 @@
 .history-content {
   font-size: 0.9rem;
   line-height: 1.5;
-  color: #333;
+  color: var(--text-primary);
   max-height: 100px;
   overflow: hidden;
   position: relative;
@@ -293,7 +295,7 @@
   left: 0;
   right: 0;
   height: 20px;
-  background: linear-gradient(transparent, white);
+  background: linear-gradient(transparent, var(--background-color));
   pointer-events: none;
   transition: opacity 0.3s ease;
 }
@@ -330,7 +332,7 @@
 .image-info {
   margin-top: 0.5rem;
   font-size: 0.8rem;
-  color: #6c757d;
+  color: var(--text-secondary);
   font-style: italic;
   max-height: 40px; /* Bilgi alanı için maksimum yükseklik */
   overflow: hidden;
@@ -358,7 +360,7 @@
   display: flex;
   gap: 1rem;
   font-size: 0.8rem;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
 .history-meta i {
