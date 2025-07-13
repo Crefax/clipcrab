@@ -77,6 +77,15 @@
     "importexport": "Import / Export",
     "settings": "Settings"
   },
+  "importexport": {
+    "title": "Import / Export",
+    "desc": "You can export your clipboard history as a JSON file or import from a backup.",
+    "export": "Export as JSON",
+    "import": "Import from JSON",
+    "import_success": "Import successful! {count} items added.",
+    "import_error": "Import failed! Invalid or corrupt file.",
+    "choose_file": "Choose JSON File"
+  },
   "settings": {
     "language": {
       "title": "Language Settings",

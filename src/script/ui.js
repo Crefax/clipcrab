@@ -1,5 +1,16 @@
 import { waitForI18n, formatTimeAgo, truncateText, getTextIcon, getTextTypeLabel, showToast } from './utils.js';
 import { copyToClipboard, deleteHistoryItem, togglePin, getClipboardHistory, getFilteredHistory, getSearchQuery } from './clipboard.js';
+// ESM importlar kaldırıldı, Tauri API globalden alınacak
+// import { invoke } from '@tauri-apps/api/tauri';
+// import { save } from '@tauri-apps/api/dialog';
+// import { writeTextFile } from '@tauri-apps/api/fs';
+
+// Tauri API'yi globalden al
+const { invoke } = window.__TAURI__.core || {};
+const { save, writeTextFile } = window.__TAURI__.fs ? window.__TAURI__ : {};
+// Eğer dialog ve fs API'leri window.__TAURI__ altında farklıysa, aşağıda kontrol edilecek
+
+const { core } = window.__TAURI__;
 
 // DOM Elements
 export const elements = {
@@ -68,6 +79,9 @@ export function initI18n() {
   
   // Ayarlar sistemini başlat
   initSettings();
+
+  // Import/Export sayfası fonksiyonları
+  initImportExport();
 }
 
 // Navigasyon sistemi
@@ -658,3 +672,58 @@ export async function showMessageModal(item) {
     document.body.removeChild(modal);
   });
 } 
+
+// Import/Export sayfası fonksiyonları
+export function initImportExport() {
+  const exportBtn = document.getElementById('export-json');
+  const importBtn = document.getElementById('import-json');
+  const importFile = document.getElementById('import-file');
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', async () => {
+      try {
+        // Clipboard geçmişini Rust tarafından al
+        const json = await invoke('export_clipboard_history');
+        // Klasik web indirme yöntemiyle dosya olarak kaydet
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'clipboard_history.json';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+        showToast('Dışa aktarma başarılı!', 'success');
+      } catch (e) {
+        showToast(e && e.toString ? e.toString() : 'Export failed!', 'error');
+        console.error('Export error:', e);
+      }
+    });
+  }
+
+  if (importBtn && importFile) {
+    importBtn.addEventListener('click', () => {
+      importFile.value = '';
+      importFile.click();
+    });
+    importFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const json = ev.target.result;
+          const count = await invoke('import_clipboard_history', { jsonData: json });
+          showToast(`İçe aktarma başarılı! ${count} öğe eklendi.`, 'success');
+        } catch (err) {
+          showToast('İçe aktarma başarısız! Geçersiz veya bozuk dosya.', 'error');
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+}
+// initI18n içinde veya sayfa geçişlerinde importexport sayfası için de başlatıcı fonksiyonu çağırmayı unutma. 

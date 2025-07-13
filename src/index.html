@@ -106,9 +106,19 @@
       <div id="importexport-page" class="page">
         <main class="content">
           <div class="importexport-container">
-            <h2><i class="fas fa-file-import"></i> Import / Export</h2>
-            <p>Clipboard geçmişinizi dışa aktarabilir veya yedekten içe aktarabilirsiniz.</p>
-            <!-- Buraya ileride butonlar ve fonksiyonlar eklenebilir -->
+            <h2><i class="fas fa-file-import"></i> <span class="importexport-title">Import / Export</span></h2>
+            <p class="importexport-desc">Clipboard geçmişinizi dışa aktarabilir veya yedekten içe aktarabilirsiniz.</p>
+            <div class="importexport-actions">
+              <button id="export-json" class="btn btn-primary">
+                <i class="fas fa-download"></i>
+                <span class="export-label">Export as JSON</span>
+              </button>
+              <input type="file" id="import-file" accept="application/json" style="display:none" />
+              <button id="import-json" class="btn btn-secondary">
+                <i class="fas fa-upload"></i>
+                <span class="import-label">Import from JSON</span>
+              </button>
+            </div>
           </div>
         </main>
       </div>

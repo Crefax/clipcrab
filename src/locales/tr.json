@@ -117,6 +117,15 @@
       "365_days": "1 yıl"
     }
   },
+  "importexport": {
+    "title": "İçe/Dışa Aktar",
+    "desc": "Clipboard geçmişinizi JSON dosyası olarak dışa aktarabilir veya yedekten içe aktarabilirsiniz.",
+    "export": "JSON Olarak Dışa Aktar",
+    "import": "JSON'dan İçe Aktar",
+    "import_success": "İçe aktarma başarılı! {count} öğe eklendi.",
+    "import_error": "İçe aktarma başarısız! Geçersiz veya bozuk dosya.",
+    "choose_file": "JSON Dosyası Seç"
+  },
   "errors": {
     "copy_failed": "Kopyalama başarısız!",
     "delete_failed": "Silme başarısız!",

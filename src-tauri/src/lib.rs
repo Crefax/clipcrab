@@ -101,7 +101,9 @@ pub fn run() {
             commands::get_clipboard_history,
             commands::delete_clipboard_item,
             commands::clear_all_history,
-            commands::toggle_pin
+            commands::toggle_pin,
+            commands::export_clipboard_history,
+            commands::import_clipboard_history
         ])
         .run(tauri::generate_context!())
         .expect("Failed to start Tauri application");
