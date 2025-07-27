@@ -116,6 +116,9 @@ export function switchPage(pageName) {
   if (pageName === 'history') {
     // History sayfasına geçerken clipboard geçmişini yenile
     loadClipboardHistory();
+  } else if (pageName === 'importexport') {
+    // Import/Export sayfasına geçerken metinleri güncelle
+    updateImportExportTexts();
   } else if (pageName === 'settings') {
     // Settings sayfasına geçerken ayarları yükle
     loadSettings();
@@ -135,13 +138,13 @@ export function initSettings() {
     // Dil seçenekleri
     const options = elements.languageMenu.querySelectorAll('.language-option');
     options.forEach(option => {
-      option.addEventListener('click', function() {
+      option.addEventListener('click', async function() {
         const lang = this.dataset.lang;
         console.log('Language selected:', lang);
         
         // Dil değiştir
         if (window.i18n && window.i18n.setLanguage) {
-          window.i18n.setLanguage(lang);
+          await window.i18n.setLanguage(lang);
         } else {
           // Fallback: sayfayı yenile
           localStorage.setItem('language', lang);
@@ -342,13 +345,50 @@ export async function updatePageTexts() {
   if (document.querySelector('#no-results h3')) document.querySelector('#no-results h3').textContent = await window.i18n.t('no_results.title');
   if (document.querySelector('#no-results p')) document.querySelector('#no-results p').textContent = await window.i18n.t('no_results.message');
   
+  // Import/Export page texts
+  updateImportExportTexts();
+  
   // Settings page texts
   updateSettingsTexts();
+  
+  // Select options
+  updateSelectOptions();
   
   // Mevcut clipboard öğelerini yeniden render et
   await renderHistory();
   if (window.i18n && window.i18n.updateCurrentLanguageUI) {
     window.i18n.updateCurrentLanguageUI();
+  }
+}
+
+// Import/Export sayfası metinlerini güncelle
+export async function updateImportExportTexts() {
+  await waitForI18n();
+  
+  // Import/Export title
+  if (document.querySelector('.importexport-title')) {
+    document.querySelector('.importexport-title').textContent = await window.i18n.t('importexport.title');
+  }
+  
+  // Import/Export description
+  if (document.querySelector('.importexport-desc span')) {
+    document.querySelector('.importexport-desc span').textContent = await window.i18n.t('importexport.desc');
+  }
+  
+  // Export button
+  if (document.querySelector('.export-label')) {
+    document.querySelector('.export-label').textContent = await window.i18n.t('importexport.export');
+  }
+  if (document.querySelector('#export-json small')) {
+    document.querySelector('#export-json small').textContent = await window.i18n.t('importexport.export_desc');
+  }
+  
+  // Import button
+  if (document.querySelector('.import-label')) {
+    document.querySelector('.import-label').textContent = await window.i18n.t('importexport.import');
+  }
+  if (document.querySelector('#import-json small')) {
+    document.querySelector('#import-json small').textContent = await window.i18n.t('importexport.import_desc');
   }
 }
 
@@ -382,6 +422,32 @@ export async function updateSettingsTexts() {
   // Action buttons
   if (document.querySelector('#save-settings span')) document.querySelector('#save-settings span').textContent = await window.i18n.t('settings.actions.save');
   if (document.querySelector('#reset-settings span')) document.querySelector('#reset-settings span').textContent = await window.i18n.t('settings.actions.reset');
+  
+  // Select options
+  updateSelectOptions();
+}
+
+// Select option'larını güncelle
+export async function updateSelectOptions() {
+  await waitForI18n();
+  
+  // Max history options
+  const maxHistoryOptions = document.querySelectorAll('#max-history option');
+  maxHistoryOptions.forEach(option => {
+    const key = option.getAttribute('data-i18n');
+    if (key) {
+      option.textContent = window.i18n.tSync(key);
+    }
+  });
+  
+  // Auto clear options
+  const autoClearOptions = document.querySelectorAll('#auto-clear option');
+  autoClearOptions.forEach(option => {
+    const key = option.getAttribute('data-i18n');
+    if (key) {
+      option.textContent = window.i18n.tSync(key);
+    }
+  });
 }
 
 // Global olarak erişilebilir yap
@@ -696,9 +762,14 @@ export function initImportExport() {
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
         }, 100);
-        showToast('Dışa aktarma başarılı!', 'success');
+        
+        // Dil desteği ile başarı mesajı
+        const successMessage = await window.i18n.t('importexport.export_success');
+        showToast(successMessage, 'success');
       } catch (e) {
-        showToast(e && e.toString ? e.toString() : 'Export failed!', 'error');
+        // Dil desteği ile hata mesajı
+        const errorMessage = await window.i18n.t('importexport.export_error');
+        showToast(e && e.toString ? e.toString() : errorMessage, 'error');
         console.error('Export error:', e);
       }
     });
@@ -717,9 +788,14 @@ export function initImportExport() {
         try {
           const json = ev.target.result;
           const count = await invoke('import_clipboard_history', { jsonData: json });
-          showToast(`İçe aktarma başarılı! ${count} öğe eklendi.`, 'success');
+          
+          // Dil desteği ile başarı mesajı
+          const successMessage = await window.i18n.t('importexport.import_success', { count: count });
+          showToast(successMessage, 'success');
         } catch (err) {
-          showToast('İçe aktarma başarısız! Geçersiz veya bozuk dosya.', 'error');
+          // Dil desteği ile hata mesajı
+          const errorMessage = await window.i18n.t('importexport.import_error');
+          showToast(errorMessage, 'error');
         }
       };
       reader.readAsText(file);

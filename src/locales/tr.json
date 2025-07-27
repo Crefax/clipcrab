@@ -111,20 +111,33 @@
     },
     "clear_options": {
       "never": "Asla",
-      "7_days": "7 gün",
-      "30_days": "30 gün",
-      "90_days": "90 gün",
-      "365_days": "1 yıl"
+      "7": "7 gün",
+      "30": "30 gün",
+      "90": "90 gün",
+      "365": "1 yıl"
+    },
+    "history_options": {
+      "100": "100 öğe",
+      "250": "250 öğe",
+      "500": "500 öğe",
+      "1000": "1000 öğe",
+      "unlimited": "Sınırsız"
     }
   },
   "importexport": {
     "title": "İçe/Dışa Aktar",
-    "desc": "Clipboard geçmişinizi JSON dosyası olarak dışa aktarabilir veya yedekten içe aktarabilirsiniz.",
+    "desc": "Clipboard geçmişinizi güvenli bir şekilde dışa aktarabilir veya yedekten içe aktarabilirsiniz. Bu özellik verilerinizi yedeklemenize ve farklı cihazlar arasında senkronize etmenize olanak tanır.",
     "export": "JSON Olarak Dışa Aktar",
+    "export_desc": "Clipboard geçmişinizi JSON formatında dışa aktarın",
     "import": "JSON'dan İçe Aktar",
+    "import_desc": "Önceden dışa aktarılmış verileri içe aktarın",
     "import_success": "İçe aktarma başarılı! {count} öğe eklendi.",
     "import_error": "İçe aktarma başarısız! Geçersiz veya bozuk dosya.",
-    "choose_file": "JSON Dosyası Seç"
+    "export_success": "Dışa aktarma başarılı!",
+    "export_error": "Dışa aktarma başarısız!",
+    "choose_file": "JSON Dosyası Seç",
+    "file_selected": "Dosya seçildi: {filename}",
+    "no_file_selected": "Dosya seçilmedi"
   },
   "errors": {
     "copy_failed": "Kopyalama başarısız!",

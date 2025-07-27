@@ -30,7 +30,7 @@ async function loadLanguage(lang) {
   return data;
 }
 
-async function t(key, lang = currentLanguage) {
+async function t(key, params = {}, lang = currentLanguage) {
   const data = await loadLanguage(lang);
   const keys = key.split('.');
   let result = data;
@@ -41,15 +41,27 @@ async function t(key, lang = currentLanguage) {
       return key;
     }
   }
+  
+  if (typeof result === 'string' && Object.keys(params).length > 0) {
+    // Parametreleri değiştir
+    return result.replace(/\{(\w+)\}/g, (match, paramName) => {
+      return params[paramName] !== undefined ? params[paramName] : match;
+    });
+  }
+  
   return result || key;
 }
 
-function setLanguage(lang) {
+async function setLanguage(lang) {
   if (!SUPPORTED_LANGUAGES[lang]) lang = DEFAULT_LANGUAGE;
   currentLanguage = lang;
   localStorage.setItem('language', lang);
   updateCurrentLanguageUI();
-  window.location.reload();
+  
+  // Sayfayı yenilemek yerine dinamik güncelleme yap
+  if (window.updatePageTexts) {
+    await window.updatePageTexts();
+  }
 }
 
 function getCurrentLanguage() {
@@ -60,8 +72,32 @@ function getSupportedLanguages() {
   return SUPPORTED_LANGUAGES;
 }
 
+// Sync versiyon için
+function tSync(key, params = {}) {
+  const data = translations[currentLanguage] || {};
+  const keys = key.split('.');
+  let result = data;
+  for (const k of keys) {
+    if (result && typeof result === 'object' && k in result) {
+      result = result[k];
+    } else {
+      return key;
+    }
+  }
+  
+  if (typeof result === 'string' && Object.keys(params).length > 0) {
+    // Parametreleri değiştir
+    return result.replace(/\{(\w+)\}/g, (match, paramName) => {
+      return params[paramName] !== undefined ? params[paramName] : match;
+    });
+  }
+  
+  return result || key;
+}
+
 window.i18n = {
   t,
+  tSync,
   setLanguage,
   getCurrentLanguage,
   getSupportedLanguages,

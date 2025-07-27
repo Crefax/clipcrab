@@ -106,17 +106,25 @@
       <div id="importexport-page" class="page">
         <main class="content">
           <div class="importexport-container">
-            <h2><i class="fas fa-file-import"></i> <span class="importexport-title">Import / Export</span></h2>
-            <p class="importexport-desc">Clipboard geçmişinizi dışa aktarabilir veya yedekten içe aktarabilirsiniz.</p>
+            <h2>
+              <i class="fas fa-exchange-alt"></i>
+              <span class="importexport-title" data-i18n="importexport.title">Import / Export</span>
+            </h2>
+            <p class="importexport-desc">
+              <i class="fas fa-info-circle"></i>
+              <span data-i18n="importexport.desc">Clipboard geçmişinizi güvenli bir şekilde dışa aktarabilir veya yedekten içe aktarabilirsiniz. Bu özellik verilerinizi yedeklemenize ve farklı cihazlar arasında senkronize etmenize olanak tanır.</span>
+            </p>
             <div class="importexport-actions">
               <button id="export-json" class="btn btn-primary">
                 <i class="fas fa-download"></i>
-                <span class="export-label">Export as JSON</span>
+                <span class="export-label" data-i18n="importexport.export">Export as JSON</span>
+                <small data-i18n="importexport.export_desc">Clipboard geçmişinizi JSON formatında dışa aktarın</small>
               </button>
               <input type="file" id="import-file" accept="application/json" style="display:none" />
               <button id="import-json" class="btn btn-secondary">
                 <i class="fas fa-upload"></i>
-                <span class="import-label">Import from JSON</span>
+                <span class="import-label" data-i18n="importexport.import">Import from JSON</span>
+                <small data-i18n="importexport.import_desc">Önceden dışa aktarılmış verileri içe aktarın</small>
               </button>
             </div>
           </div>
@@ -157,21 +165,21 @@
               <div class="setting-item">
                 <label for="max-history">Maximum history items</label>
                 <select id="max-history">
-                  <option value="100">100 items</option>
-                  <option value="250">250 items</option>
-                  <option value="500">500 items</option>
-                  <option value="1000">1000 items</option>
-                  <option value="unlimited">Unlimited</option>
+                  <option value="100" data-i18n="settings.history_options.100">100 items</option>
+                  <option value="250" data-i18n="settings.history_options.250">250 items</option>
+                  <option value="500" data-i18n="settings.history_options.500">500 items</option>
+                  <option value="1000" data-i18n="settings.history_options.1000">1000 items</option>
+                  <option value="unlimited" data-i18n="settings.history_options.unlimited">Unlimited</option>
                 </select>
               </div>
               <div class="setting-item">
                 <label for="auto-clear">Auto-clear old items</label>
                 <select id="auto-clear">
-                  <option value="never">Never</option>
-                  <option value="7">7 days</option>
-                  <option value="30">30 days</option>
-                  <option value="90">90 days</option>
-                  <option value="365">1 year</option>
+                  <option value="never" data-i18n="settings.clear_options.never">Never</option>
+                  <option value="7" data-i18n="settings.clear_options.7">7 days</option>
+                  <option value="30" data-i18n="settings.clear_options.30">30 days</option>
+                  <option value="90" data-i18n="settings.clear_options.90">90 days</option>
+                  <option value="365" data-i18n="settings.clear_options.365">1 year</option>
                 </select>
               </div>
             </div>

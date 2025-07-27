@@ -309,7 +309,7 @@
   margin-bottom: 0.75rem;
   text-align: center;
   position: relative;
-  min-height: 120px; /* Butonlar için minimum yükseklik */
+  min-height: 140px; /* Butonlar için minimum yükseklik */
   max-height: 350px; /* Maksimum yükseklik sınırı */
   overflow: hidden; /* Taşan kısmı gizle */
 }
@@ -843,4 +843,251 @@
 }
 
 /* Eski .message-info ve .modal-footer stillerini override et */
-.message-info { display: none; } 
+.message-info { display: none; }
+
+/* Import/Export Page Styles */
+.importexport-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--bg-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
+}
+
+.importexport-container h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.importexport-container h2 i {
+  color: var(--accent-color);
+  font-size: 1.5rem;
+}
+
+.importexport-desc {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border-left: 4px solid var(--accent-color);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.importexport-desc i {
+  color: var(--accent-color);
+  font-size: 1.1rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.importexport-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.importexport-actions .btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem 1.5rem;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-color) 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 140px;
+}
+
+.importexport-actions .btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.importexport-actions .btn:hover::before {
+  left: 100%;
+}
+
+.importexport-actions .btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: var(--accent-color);
+}
+
+.importexport-actions .btn:active {
+  transform: translateY(-2px);
+}
+
+.importexport-actions .btn i {
+  font-size: 2rem;
+  color: var(--accent-color);
+  transition: all 0.3s ease;
+}
+
+.importexport-actions .btn:hover i {
+  transform: scale(1.1);
+}
+
+.importexport-actions .btn span {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  text-align: center;
+  font-weight: 600;
+}
+
+.importexport-actions .btn small {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: center;
+  opacity: 0.8;
+  line-height: 1.3;
+  margin-top: 0.25rem;
+}
+
+/* Export button specific styles */
+.importexport-actions .btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.importexport-actions .btn-primary i {
+  color: #ffd700;
+}
+
+.importexport-actions .btn-primary span {
+  color: white;
+}
+
+.importexport-actions .btn-primary:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  border-color: #ffd700;
+}
+
+/* Import button specific styles */
+.importexport-actions .btn-secondary {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.importexport-actions .btn-secondary i {
+  color: white;
+}
+
+.importexport-actions .btn-secondary span {
+  color: white;
+}
+
+.importexport-actions .btn-secondary:hover {
+  background: linear-gradient(135deg, #e085e8 0%, #e54b5f 100%);
+  border-color: #ffd700;
+}
+
+/* Responsive design for import/export */
+@media (max-width: 768px) {
+  .importexport-container {
+    margin: 1rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .importexport-container h2 {
+    font-size: 1.5rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .importexport-actions {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .importexport-actions .btn {
+    padding: 1.5rem 1rem;
+    min-height: 120px;
+  }
+  
+  .importexport-actions .btn i {
+    font-size: 1.5rem;
+  }
+}
+
+/* Dark theme adjustments */
+.theme-dark .importexport-container {
+  background: var(--bg-color);
+  border-color: var(--border-color);
+}
+
+.theme-dark .importexport-desc {
+  background: var(--bg-secondary);
+  border-left-color: var(--accent-color);
+}
+
+/* Animation for page load */
+.importexport-container {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover effects for better interactivity */
+.importexport-actions .btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.importexport-actions .btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.importexport-actions .btn:hover::after {
+  width: 300px;
+  height: 300px;
+} 
