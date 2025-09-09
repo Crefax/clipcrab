@@ -99,7 +99,7 @@
     },
     "privacy": {
       "title": "Privacy & Security",
-      "auto_start": "Auto-start with system",
+      "auto_start": "Start with Windows",
       "encrypt_data": "Encrypt clipboard data"
     },
     "general": {

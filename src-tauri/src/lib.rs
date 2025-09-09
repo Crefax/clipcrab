@@ -77,11 +77,15 @@ fn enable_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"])
+        ))
         .on_window_event(|window, event| match event {
             WindowEvent::CloseRequested { api, .. } => {
                 let _ = window.hide();
@@ -95,6 +99,8 @@ pub fn run() {
             }
             
             clipboard::start_clipboard_watcher(app.handle().clone());
+            
+            
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -103,7 +109,9 @@ pub fn run() {
             commands::clear_all_history,
             commands::toggle_pin,
             commands::export_clipboard_history,
-            commands::import_clipboard_history
+            commands::import_clipboard_history,
+            commands::is_first_run,
+            commands::complete_first_run
         ])
         .run(tauri::generate_context!())
         .expect("Failed to start Tauri application");

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "clipcrab",
-  "version": "0.1.0",
-  "identifier": "net.clipcrab.www",
+  "version": "0.2.0",
+  "identifier": "ClipCrab",
   "build": {
     "frontendDist": "../src"
   },

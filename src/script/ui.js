@@ -12,6 +12,12 @@ const { save, writeTextFile } = window.__TAURI__.fs ? window.__TAURI__ : {};
 
 const { core } = window.__TAURI__;
 
+// Autostart plugin API'lerini al
+let autostartAPI = null;
+if (window.__TAURI__.plugins && window.__TAURI__.plugins.autostart) {
+  autostartAPI = window.__TAURI__.plugins.autostart;
+}
+
 // DOM Elements
 export const elements = {
   historyList: document.getElementById("history-list"),
@@ -43,7 +49,8 @@ export const elements = {
   showNotificationsCheckbox: document.getElementById("show-notifications"),
   soundEnabledCheckbox: document.getElementById("sound-enabled"),
   themeSelect: document.getElementById("theme-select"),
-  compactModeCheckbox: document.getElementById("compact-mode")
+  compactModeCheckbox: document.getElementById("compact-mode"),
+  autostartCheckbox: document.getElementById("autostart-enabled")
 };
 
 // Dil sistemi
@@ -183,10 +190,11 @@ export function initSettings() {
   if (elements.resetSettingsBtn) {
     elements.resetSettingsBtn.addEventListener('click', resetSettings);
   }
+  
 }
 
 // Ayarları yükle
-export function loadSettings() {
+export async function loadSettings() {
   const settings = getStoredSettings();
   // Form elemanlarını doldur
   if (elements.maxHistorySelect) {
@@ -207,6 +215,39 @@ export function loadSettings() {
   if (elements.compactModeCheckbox) {
     elements.compactModeCheckbox.checked = settings.compactMode || false;
   }
+  
+  // Autostart durumunu kontrol et
+  if (elements.autostartCheckbox) {
+    try {
+      // Farklı API çağırma yöntemlerini dene
+      let enabled = false;
+      
+      // Yöntem 1: Plugin API
+      if (autostartAPI && autostartAPI.isEnabled) {
+        enabled = await autostartAPI.isEnabled();
+      } 
+      // Yöntem 2: Invoke ile
+      else {
+        try {
+          enabled = await invoke('plugin:autostart|is_enabled');
+        } catch (e1) {
+          // Yöntem 3: Direkt komut
+          try {
+            enabled = await invoke('is_enabled');
+          } catch (e2) {
+            console.log('Autostart API bulunamadı, varsayılan olarak false');
+            enabled = false;
+          }
+        }
+      }
+      
+      elements.autostartCheckbox.checked = enabled;
+      console.log('Autostart durumu:', enabled);
+    } catch (error) {
+      console.error('Autostart durumu kontrol edilemedi:', error);
+      elements.autostartCheckbox.checked = false;
+    }
+  }
 }
 
 // Ayarları kaydet
@@ -220,6 +261,64 @@ export async function saveSettings() {
       theme: elements.themeSelect?.value || 'auto',
       compactMode: elements.compactModeCheckbox?.checked || false
     };
+    
+    // Autostart ayarını uygula
+    if (elements.autostartCheckbox) {
+      try {
+        // Mevcut durumu kontrol et
+        let currentAutostart = false;
+        if (autostartAPI && autostartAPI.isEnabled) {
+          currentAutostart = await autostartAPI.isEnabled();
+        } else {
+          try {
+            currentAutostart = await invoke('plugin:autostart|is_enabled');
+          } catch (e) {
+            try {
+              currentAutostart = await invoke('is_enabled');
+            } catch (e2) {
+              console.log('Autostart durumu okunamadı');
+            }
+          }
+        }
+        
+        const newAutostart = elements.autostartCheckbox.checked;
+        console.log('Autostart değişikliği:', currentAutostart, '->', newAutostart);
+        
+        if (currentAutostart !== newAutostart) {
+          if (newAutostart) {
+            // Etkinleştir
+            if (autostartAPI && autostartAPI.enable) {
+              await autostartAPI.enable();
+            } else {
+              try {
+                await invoke('plugin:autostart|enable');
+              } catch (e) {
+                await invoke('enable');
+              }
+            }
+            console.log('Autostart etkinleştirildi');
+            showToast('Windows ile otomatik başlatma etkinleştirildi', 'success');
+          } else {
+            // Devre dışı bırak
+            if (autostartAPI && autostartAPI.disable) {
+              await autostartAPI.disable();
+            } else {
+              try {
+                await invoke('plugin:autostart|disable');
+              } catch (e) {
+                await invoke('disable');
+              }
+            }
+            console.log('Autostart devre dışı bırakıldı');
+            showToast('Windows ile otomatik başlatma devre dışı bırakıldı', 'success');
+          }
+        }
+      } catch (error) {
+        console.error('Autostart ayarı uygulanamadı:', error);
+        showToast('Autostart ayarı uygulanamadı: ' + error, 'error');
+      }
+    }
+    
     // LocalStorage'a kaydet
     localStorage.setItem('clipcrab_settings', JSON.stringify(settings));
     // Tema değişikliğini uygula
@@ -253,6 +352,23 @@ export async function resetSettings() {
       theme: 'auto',
       compactMode: false
     };
+    
+    // Autostart'ı devre dışı bırak
+    try {
+      if (autostartAPI && autostartAPI.disable) {
+        await autostartAPI.disable();
+      } else {
+        try {
+          await invoke('plugin:autostart|disable');
+        } catch (e) {
+          await invoke('disable');
+        }
+      }
+      console.log('Reset: Autostart devre dışı bırakıldı');
+    } catch (error) {
+      console.error('Autostart devre dışı bırakılamadı:', error);
+    }
+    
     // LocalStorage'dan sil
     localStorage.removeItem('clipcrab_settings');
     // Form elemanlarını sıfırla
@@ -273,10 +389,28 @@ export async function resetSettings() {
 export function getStoredSettings() {
   try {
     const stored = localStorage.getItem('clipcrab_settings');
-    return stored ? JSON.parse(stored) : {};
+    const defaultSettings = {
+      maxHistory: '500',
+      autoClear: 'never',
+      showNotifications: true,
+      soundEnabled: false,
+      theme: 'auto',
+      compactMode: false,
+      autostartEnabled: true // Varsayılan olarak autostart aktif
+    };
+    
+    return stored ? { ...defaultSettings, ...JSON.parse(stored) } : defaultSettings;
   } catch (error) {
     console.error('Error loading stored settings:', error);
-    return {};
+    return {
+      maxHistory: '500',
+      autoClear: 'never',
+      showNotifications: true,
+      soundEnabled: false,
+      theme: 'auto',
+      compactMode: false,
+      autostartEnabled: true
+    };
   }
 }
 

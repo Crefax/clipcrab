@@ -21,6 +21,8 @@
   --scrollbar-track: #f1f1f1;
   --scrollbar-thumb: #c1c1c1;
   --scrollbar-thumb-hover: #a8a8a8;
+  --modal-bg: #ffffff;
+  --modal-text: #333333;
 }
 
 /* Dark theme */
@@ -38,6 +40,8 @@
   --scrollbar-track: #2d2d2d;
   --scrollbar-thumb: #555555;
   --scrollbar-thumb-hover: #777777;
+  --modal-bg: #2d2d2d;
+  --modal-text: #ffffff;
 }
 
 /* Light theme override */
@@ -55,6 +59,8 @@
   --scrollbar-track: #f1f1f1;
   --scrollbar-thumb: #c1c1c1;
   --scrollbar-thumb-hover: #a8a8a8;
+  --modal-bg: #ffffff;
+  --modal-text: #333333;
 }
 
 body {

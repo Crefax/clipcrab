@@ -473,7 +473,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -493,9 +494,11 @@
 }
 
 .modal {
-  background: white;
+  background: var(--modal-bg);
+  color: var(--modal-text);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
@@ -504,8 +507,9 @@
 
 .modal-header {
   padding: 1.5rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px 12px 0 0;
   color: white;
 }
 
@@ -522,11 +526,14 @@
 
 .modal-body {
   padding: 1.5rem;
+  color: var(--modal-text);
+  background: var(--modal-bg);
 }
 
 .modal-body p {
   margin-bottom: 1rem;
   line-height: 1.6;
+  color: var(--modal-text);
 }
 
 .preview-content {
@@ -552,7 +559,9 @@
 
 .modal-footer {
   padding: 1.5rem;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid var(--border-color);
+  background: var(--modal-bg);
+  border-radius: 0 0 12px 12px;
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
@@ -844,6 +853,65 @@
 
 /* Eski .message-info ve .modal-footer stillerini override et */
 .message-info { display: none; }
+
+/* Welcome Modal Styles */
+.welcome-modal {
+  max-width: 600px;
+  width: 95%;
+}
+
+.welcome-modal .modal-header h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+}
+
+.welcome-modal .modal-header h2 i {
+  color: #ffd700;
+  font-size: 1.75rem;
+}
+
+.welcome-modal .modal-body ul {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+}
+
+.welcome-modal .modal-body li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--modal-text);
+}
+
+.welcome-modal .modal-body li:last-child {
+  border-bottom: none;
+}
+
+.welcome-autostart {
+  background: var(--modal-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1.5rem;
+}
+
+.welcome-autostart label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  color: var(--modal-text);
+  font-weight: 500;
+}
+
+.welcome-autostart input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #667eea;
+}
+
 
 /* Import/Export Page Styles */
 .importexport-container {

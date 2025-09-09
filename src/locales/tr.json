@@ -79,7 +79,7 @@
     },
     "privacy": {
       "title": "Gizlilik ve Güvenlik",
-      "auto_start": "Sistem ile otomatik başlat",
+      "auto_start": "Windows ile otomatik başlat",
       "encrypt_data": "Clipboard verilerini şifrele"
     },
     "general": {
