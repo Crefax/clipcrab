@@ -15,7 +15,6 @@ pub fn get_clipboard_history() -> Vec<ClipboardItem> {
             // is_encrypted kolonu yoksa eski formatı kullan
             let mut stmt = conn.prepare("SELECT id, content, content_type, image_data, created_at, pinned FROM clipboard_history ORDER BY pinned DESC, id DESC LIMIT 50")
                 .expect("Failed to prepare query");
-            
             return stmt.query_map([], |row| {
                 Ok(ClipboardItem {
                     id: row.get(0)?,
@@ -36,20 +35,20 @@ pub fn get_clipboard_history() -> Vec<ClipboardItem> {
         let mut content: String = row.get(1)?;
         let mut image_data: Option<String> = row.get(3)?;
         let is_encrypted: bool = row.get(6)?;
-        
+
         // Eğer veri şifrelenmişse çöz
         if is_encrypted {
             if let Ok(decrypted_content) = security::decrypt(&content) {
                 content = decrypted_content;
             }
-            
+
             if let Some(ref img_data) = image_data {
                 if let Ok(decrypted_image) = security::decrypt(img_data) {
                     image_data = Some(decrypted_image);
                 }
             }
         }
-        
+
         Ok(ClipboardItem {
             id: row.get(0)?,
             content,
@@ -62,7 +61,7 @@ pub fn get_clipboard_history() -> Vec<ClipboardItem> {
     .expect("Failed to execute query")
     .filter_map(Result::ok)
     .collect()
-} 
+}
 
 #[tauri::command]
 pub fn export_clipboard_history() -> Result<String, String> {
@@ -120,4 +119,4 @@ pub fn import_clipboard_history(json_data: String) -> Result<usize, String> {
         }
     }
     Ok(inserted)
-} 
+}

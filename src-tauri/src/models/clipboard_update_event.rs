@@ -4,4 +4,4 @@ use serde::{Deserialize, Serialize};
 pub struct ClipboardUpdateEvent {
     pub action: String,
     pub message: String,
-} 
+}

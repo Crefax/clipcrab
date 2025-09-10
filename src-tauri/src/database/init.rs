@@ -32,4 +32,4 @@ pub fn init_db() -> Connection {
     super::migrate::migrate_database(&conn);
 
     conn
-} 
+}

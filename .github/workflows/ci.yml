@@ -28,8 +28,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run Cargo Check
-        run: cargo check --manifest-path src-tauri/Cargo.toml
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Run Cargo Tests
         run: cargo test --manifest-path src-tauri/Cargo.toml --verbose

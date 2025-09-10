@@ -1,14 +1,14 @@
-pub mod models;
-pub mod database;
 pub mod clipboard;
 pub mod commands;
+pub mod database;
+pub mod models;
 pub mod security;
 
 use tauri::{
-    Manager, WindowEvent,
     image::Image,
     menu::{MenuBuilder, MenuItem},
     tray::TrayIconBuilder,
+    Manager, WindowEvent,
 };
 
 fn enable_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
@@ -50,9 +50,9 @@ fn enable_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         })
         .on_tray_icon_event(|tray, event| {
             match event {
-                tauri::tray::TrayIconEvent::Click { 
-                    button: tauri::tray::MouseButton::Left, 
-                    .. 
+                tauri::tray::TrayIconEvent::Click {
+                    button: tauri::tray::MouseButton::Left,
+                    ..
                 } => {
                     if let Some(app) = tray.app_handle().get_webview_window("main") {
                         if app.is_visible().unwrap_or(false) {
@@ -63,9 +63,9 @@ fn enable_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                 }
-                tauri::tray::TrayIconEvent::Click { 
-                    button: tauri::tray::MouseButton::Right, 
-                    .. 
+                tauri::tray::TrayIconEvent::Click {
+                    button: tauri::tray::MouseButton::Right,
+                    ..
                 } => {
                     // Sağ tıklamada menü otomatik olarak gösterilir, hiçbir şey yapmamız gerekmez
                 }
@@ -77,30 +77,27 @@ fn enable_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            Some(vec!["--minimized"])
+            Some(vec!["--minimized"]),
         ))
-        .on_window_event(|window, event| match event {
-            WindowEvent::CloseRequested { api, .. } => {
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event {
                 let _ = window.hide();
                 api.prevent_close();
             }
-            _ => {}
         })
         .setup(|app| {
             if let Err(e) = enable_tray(app) {
                 eprintln!("Tray icon setup failed: {}", e);
             }
-            
+
             clipboard::start_clipboard_watcher(app.handle().clone());
-            
-            
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
