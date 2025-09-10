@@ -30,19 +30,10 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "identifier": "net.clipcrab.www",
     "publisher": "ClipCrab",
     "copyright": "Copyright © 2024 ClipCrab",
     "category": "Utility",
     "shortDescription": "Clipboard Manager",
-    "longDescription": "A secure clipboard manager with encryption and system tray support.",
-    "windows": {
-      "certificateThumbprint": null,
-      "digestAlgorithm": "sha256",
-      "timestampUrl": "",
-      "wix": {
-        "language": ["en-US", "tr-TR"]
-      }
-    }
+    "longDescription": "A secure clipboard manager with encryption and system tray support."
   }
 }
