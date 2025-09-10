@@ -4,33 +4,54 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch: # Manuel çalıştırma için
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
-
+    
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build Tauri App
         run: npm run tauri build
 
-      - name: Upload MSI to release
+      - name: List build outputs (debug)
+        run: |
+          echo "Listing build outputs:"
+          dir src-tauri\target\release\bundle\ /s
+        shell: cmd
+
+      - name: Create Release
+        id: create_release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ github.ref_name }}
+          name: ClipCrab ${{ github.ref_name }}
+          body: |
+            🎉 ClipCrab ${{ github.ref_name }} Release
+          draft: false
+          prerelease: false
           files: |
+            src-tauri/target/release/bundle/nsis/*.exe
             src-tauri/target/release/bundle/msi/*.msi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
