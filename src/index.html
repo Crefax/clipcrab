@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ClipCrab - Clipboard Manager</title>
+    <title>ClipCrab</title>
     <link rel="stylesheet" href="style/base.css" />
     <link rel="stylesheet" href="style/components.css" />
     <link rel="stylesheet" href="style/layout.css" />
@@ -11,248 +11,237 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
   </head>
   <body>
-    <div class="app-container">
-      <!-- Header -->
-      <header class="header">
-        <div class="header-content">
+    <div class="app">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
           <div class="logo">
-            <i class="fas fa-clipboard"></i>
-            <h1>ClipCrab</h1>
-          </div>
-          <div class="header-actions">
-            <button id="refresh" class="btn btn-primary">
-              <i class="fas fa-sync-alt"></i>
-              <span>Refresh</span>
-            </button>
-            <button id="clear-all" class="btn btn-danger">
-              <i class="fas fa-trash"></i>
-              <span>Clear</span>
-            </button>
+            <i class="fas fa-clipboard-list"></i>
+            <span>ClipCrab</span>
           </div>
         </div>
-      </header>
-
-      <!-- Navigation -->
-      <nav class="navigation">
-        <div class="nav-tabs">
-          <button id="history-tab" class="nav-tab active" data-page="history">
-            <i class="fas fa-history"></i>
+        
+        <nav class="sidebar-nav">
+          <button class="nav-item active" data-page="history" id="history-tab">
+            <i class="fas fa-clock-rotate-left"></i>
             <span>History</span>
           </button>
-          <button id="importexport-tab" class="nav-tab" data-page="importexport">
-            <i class="fas fa-file-import"></i>
-            <span>Import / Export</span>
+          <button class="nav-item" data-page="importexport" id="importexport-tab">
+            <i class="fas fa-arrow-right-arrow-left"></i>
+            <span>Import/Export</span>
           </button>
-          <button id="settings-tab" class="nav-tab" data-page="settings">
-            <i class="fas fa-cog"></i>
+          <button class="nav-item" data-page="settings" id="settings-tab">
+            <i class="fas fa-gear"></i>
             <span>Settings</span>
           </button>
-        </div>
-      </nav>
+        </nav>
 
-      <!-- History Page -->
-      <div id="history-page" class="page active">
-        <!-- Search Bar -->
-        <div class="search-container">
-          <div class="search-box">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="search-input" placeholder="Search clipboard history..." />
-            <button id="clear-search" class="clear-search">
-              <i class="fas fa-times"></i>
-            </button>
+        <div class="sidebar-footer">
+          <div class="stats">
+            <div class="stat">
+              <span class="stat-value" id="total-items">0</span>
+              <span class="stat-label">Items</span>
+            </div>
           </div>
         </div>
+      </aside>
 
-        <!-- Stats -->
-        <div class="stats-container">
-          <div class="stat-item">
-            <i class="fas fa-list"></i>
-            <span id="total-items">0</span>
-            <label>Total</label>
-          </div>
-          <div class="stat-item">
-            <i class="fas fa-clock"></i>
-            <span id="last-updated">--</span>
-            <label>Last Updated</label>
-          </div>
-        </div>
-
-        <!-- Content Area -->
-        <main class="content">
-          <div class="history-container">
-            <div id="loading" class="loading">
-              <i class="fas fa-spinner fa-spin"></i>
-              <span>Loading...</span>
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- History Page -->
+        <div id="history-page" class="page active">
+          <!-- Header -->
+          <header class="page-header">
+            <div class="search-wrapper">
+              <i class="fas fa-search"></i>
+              <input type="text" id="search-input" placeholder="Search clipboard..." />
+              <button id="clear-search" class="btn-icon" style="display: none;">
+                <i class="fas fa-xmark"></i>
+              </button>
             </div>
             
-            <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="header-actions">
+              <button id="refresh" class="btn-icon" title="Refresh">
+                <i class="fas fa-arrows-rotate"></i>
+              </button>
+              <button id="clear-all" class="btn-icon btn-danger" title="Clear All">
+                <i class="fas fa-trash-can"></i>
+              </button>
+            </div>
+          </header>
+
+          <!-- Filters -->
+          <div class="filters">
+            <button class="filter-chip active" data-filter="all">
+              <i class="fas fa-layer-group"></i>
+              All
+            </button>
+            <button class="filter-chip" data-filter="text">
+              <i class="fas fa-align-left"></i>
+              Text
+            </button>
+            <button class="filter-chip" data-filter="url">
+              <i class="fas fa-link"></i>
+              Links
+            </button>
+            <button class="filter-chip" data-filter="image">
+              <i class="fas fa-image"></i>
+              Images
+            </button>
+            <button class="filter-chip" data-filter="code">
+              <i class="fas fa-code"></i>
+              Code
+            </button>
+            <button class="filter-chip" data-filter="email">
+              <i class="fas fa-at"></i>
+              Email
+            </button>
+          </div>
+
+          <!-- Content -->
+          <div class="content-area">
+            <div id="loading" class="state-container">
+              <div class="spinner"></div>
+              <p>Loading...</p>
+            </div>
+            
+            <div id="empty-state" class="state-container" style="display: none;">
               <i class="fas fa-clipboard"></i>
-              <h3>No clipboard history yet</h3>
-              <p>Your copied items will appear here</p>
+              <h3>No items yet</h3>
+              <p>Copy something to get started</p>
             </div>
 
-            <div id="no-results" class="empty-state" style="display: none;">
+            <div id="no-results" class="state-container" style="display: none;">
               <i class="fas fa-search"></i>
-              <h3>No results found</h3>
-              <p>Try changing your search criteria</p>
+              <h3>No results</h3>
+              <p>Try different keywords</p>
             </div>
 
-            <ul id="history-list" class="history-list"></ul>
+            <div id="history-list" class="history-grid"></div>
           </div>
-        </main>
-      </div>
+        </div>
 
-      <!-- Import/Export Page -->
-      <div id="importexport-page" class="page">
-        <main class="content">
-          <div class="importexport-container">
-            <h2>
-              <i class="fas fa-exchange-alt"></i>
-              <span class="importexport-title" data-i18n="importexport.title">Import / Export</span>
-            </h2>
-            <p class="importexport-desc">
-              <i class="fas fa-info-circle"></i>
-              <span data-i18n="importexport.desc">Clipboard geçmişinizi güvenli bir şekilde dışa aktarabilir veya yedekten içe aktarabilirsiniz. Bu özellik verilerinizi yedeklemenize ve farklı cihazlar arasında senkronize etmenize olanak tanır.</span>
-            </p>
-            <div class="importexport-actions">
-              <button id="export-json" class="btn btn-primary">
-                <i class="fas fa-download"></i>
-                <span class="export-label" data-i18n="importexport.export">Export as JSON</span>
-                <small data-i18n="importexport.export_desc">Clipboard geçmişinizi JSON formatında dışa aktarın</small>
-              </button>
-              <input type="file" id="import-file" accept="application/json" style="display:none" />
-              <button id="import-json" class="btn btn-secondary">
-                <i class="fas fa-upload"></i>
-                <span class="import-label" data-i18n="importexport.import">Import from JSON</span>
-                <small data-i18n="importexport.import_desc">Önceden dışa aktarılmış verileri içe aktarın</small>
-              </button>
+        <!-- Import/Export Page -->
+        <div id="importexport-page" class="page">
+          <header class="page-header">
+            <h1><i class="fas fa-arrow-right-arrow-left"></i> Import / Export</h1>
+          </header>
+          
+          <div class="content-area">
+            <div class="card-grid">
+              <div class="action-card">
+                <div class="card-icon export">
+                  <i class="fas fa-download"></i>
+                </div>
+                <h3>Export Data</h3>
+                <p>Save your clipboard history as a JSON file</p>
+                <button id="export-json" class="btn btn-primary">
+                  <i class="fas fa-file-export"></i>
+                  Export JSON
+                </button>
+              </div>
+              
+              <div class="action-card">
+                <div class="card-icon import">
+                  <i class="fas fa-upload"></i>
+                </div>
+                <h3>Import Data</h3>
+                <p>Restore from a previously exported file</p>
+                <input type="file" id="import-file" accept="application/json" style="display:none" />
+                <button id="import-json" class="btn btn-secondary">
+                  <i class="fas fa-file-import"></i>
+                  Import JSON
+                </button>
+              </div>
             </div>
           </div>
-        </main>
-      </div>
+        </div>
 
-      <!-- Settings Page -->
-      <div id="settings-page" class="page">
-        <main class="content">
-          <div class="settings-container">
-            <div class="settings-section">
-              <h2><i class="fas fa-globe"></i> Language Settings</h2>
-              <div class="setting-item">
-                <div class="language-dropdown">
-                  <button id="language-toggle" class="language-toggle">
-                    <i class="fas fa-globe"></i>
-                    <span class="current-language-label">Language</span>
-                    <i class="fas fa-chevron-down"></i>
-                  </button>
-                  <div id="language-menu" class="language-menu">
-                    <div class="language-option" data-lang="tr">
-                      <span class="flag">🇹🇷</span>
-                      <span class="name">Türkçe</span>
-                      <i class="fas fa-check"></i>
-                    </div>
-                    <div class="language-option" data-lang="en">
+        <!-- Settings Page -->
+        <div id="settings-page" class="page">
+          <header class="page-header">
+            <h1><i class="fas fa-gear"></i> Settings</h1>
+          </header>
+          
+          <div class="content-area">
+            <div class="settings-grid">
+              <!-- Language -->
+              <div class="setting-card">
+                <div class="setting-header">
+                  <i class="fas fa-globe"></i>
+                  <h3>Language</h3>
+                </div>
+                <div class="setting-content">
+                  <div class="language-selector" id="language-selector">
+                    <button class="language-btn" data-lang="en">
                       <span class="flag">🇺🇸</span>
-                      <span class="name">English</span>
-                      <i class="fas fa-check"></i>
-                    </div>
+                      English
+                    </button>
+                    <button class="language-btn" data-lang="tr">
+                      <span class="flag">🇹🇷</span>
+                      Türkçe
+                    </button>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div class="settings-section">
-              <h2><i class="fas fa-sliders-h"></i> General Settings</h2>
-              <div class="setting-item">
-                <label for="autostart-enabled">
-                  <input type="checkbox" id="autostart-enabled" />
-                  <span>Start with Windows</span>
-                </label>
-                <p class="setting-description">Automatically start ClipCrab when Windows starts</p>
+              <!-- Startup -->
+              <div class="setting-card">
+                <div class="setting-header">
+                  <i class="fas fa-rocket"></i>
+                  <h3>Startup</h3>
+                </div>
+                <div class="setting-content">
+                  <label class="toggle-setting">
+                    <span>Start with Windows</span>
+                    <input type="checkbox" id="autostart-enabled" />
+                    <span class="toggle"></span>
+                  </label>
+                </div>
               </div>
-              <div class="setting-item">
-                <label for="max-history">Maximum history items</label>
-                <select id="max-history">
-                  <option value="100" data-i18n="settings.history_options.100">100 items</option>
-                  <option value="250" data-i18n="settings.history_options.250">250 items</option>
-                  <option value="500" data-i18n="settings.history_options.500">500 items</option>
-                  <option value="1000" data-i18n="settings.history_options.1000">1000 items</option>
-                  <option value="unlimited" data-i18n="settings.history_options.unlimited">Unlimited</option>
-                </select>
-              </div>
-              <div class="setting-item">
-                <label for="auto-clear">Auto-clear old items</label>
-                <select id="auto-clear">
-                  <option value="never" data-i18n="settings.clear_options.never">Never</option>
-                  <option value="7" data-i18n="settings.clear_options.7">7 days</option>
-                  <option value="30" data-i18n="settings.clear_options.30">30 days</option>
-                  <option value="90" data-i18n="settings.clear_options.90">90 days</option>
-                  <option value="365" data-i18n="settings.clear_options.365">1 year</option>
-                </select>
-              </div>
-            </div>
 
-            <div class="settings-section">
-              <h2><i class="fas fa-bell"></i> Notifications</h2>
-              <div class="setting-item">
-                <label for="show-notifications">
-                  <input type="checkbox" id="show-notifications" />
-                  <span>Show notifications</span>
-                </label>
-                <p class="setting-description">Show notifications when items are copied or deleted</p>
+              <!-- Appearance -->
+              <div class="setting-card">
+                <div class="setting-header">
+                  <i class="fas fa-palette"></i>
+                  <h3>Appearance</h3>
+                </div>
+                <div class="setting-content">
+                  <div class="theme-selector" id="theme-selector">
+                    <button class="theme-btn" data-theme="light">
+                      <i class="fas fa-sun"></i>
+                      Light
+                    </button>
+                    <button class="theme-btn" data-theme="dark">
+                      <i class="fas fa-moon"></i>
+                      Dark
+                    </button>
+                    <button class="theme-btn active" data-theme="auto">
+                      <i class="fas fa-circle-half-stroke"></i>
+                      Auto
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div class="setting-item">
-                <label for="sound-enabled">
-                  <input type="checkbox" id="sound-enabled" />
-                  <span>Enable sound effects</span>
-                </label>
-                <p class="setting-description">Play sounds for clipboard operations</p>
-              </div>
-            </div>
 
-            <div class="settings-section">
-              <h2><i class="fas fa-palette"></i> Appearance</h2>
-              <div class="setting-item">
-                <label for="theme-select">Theme</label>
-                <select id="theme-select">
-                  <option value="auto">Auto (System)</option>
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                </select>
+              <!-- About -->
+              <div class="setting-card">
+                <div class="setting-header">
+                  <i class="fas fa-info-circle"></i>
+                  <h3>About</h3>
+                </div>
+                <div class="setting-content">
+                  <p class="version">ClipCrab v1.0.0</p>
+                  <p class="copyright">A modern clipboard manager</p>
+                </div>
               </div>
-              <div class="setting-item">
-                <label for="compact-mode">
-                  <input type="checkbox" id="compact-mode" />
-                  <span>Compact mode</span>
-                </label>
-                <p class="setting-description">Use a more compact layout for history items</p>
-              </div>
-            </div>
-
-            <div class="settings-actions">
-              <button id="save-settings" class="btn btn-primary">
-                <i class="fas fa-save"></i>
-                <span>Save Settings</span>
-              </button>
-              <button id="reset-settings" class="btn btn-secondary">
-                <i class="fas fa-undo"></i>
-                <span>Reset to Default</span>
-              </button>
             </div>
           </div>
-        </main>
-      </div>
-
-      <!-- Footer -->
-      <footer class="footer">
-        <div class="footer-content">
-          <span>ClipCrab v1.0</span>
-          <span>•</span>
-          <span>Safely stores your clipboard history</span>
         </div>
-      </footer>
+      </main>
     </div>
 
-    <!-- Toast Notification -->
+    <!-- Toast -->
     <div id="toast" class="toast"></div>
 
     <script src="locales/i18n.js"></script>

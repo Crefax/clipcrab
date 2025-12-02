@@ -1,18 +1,9 @@
 import { waitForI18n, formatTimeAgo, truncateText, getTextIcon, getTextTypeLabel, showToast } from './utils.js';
-import { copyToClipboard, deleteHistoryItem, togglePin, getClipboardHistory, getFilteredHistory, getSearchQuery } from './clipboard.js';
-// ESM importlar kaldırıldı, Tauri API globalden alınacak
-// import { invoke } from '@tauri-apps/api/tauri';
-// import { save } from '@tauri-apps/api/dialog';
-// import { writeTextFile } from '@tauri-apps/api/fs';
+import { copyToClipboard, deleteHistoryItem, togglePin, getClipboardHistory, getFilteredHistory, getSearchQuery, loadClipboardHistory, loadMoreItems, canLoadMore, getIsLoading, getTotalCount, hasActiveFilter, canLoadMoreFiltered, loadMoreFilteredItems } from './clipboard.js';
 
-// Tauri API'yi globalden al
 const { invoke } = window.__TAURI__.core || {};
-const { save, writeTextFile } = window.__TAURI__.fs ? window.__TAURI__ : {};
-// Eğer dialog ve fs API'leri window.__TAURI__ altında farklıysa, aşağıda kontrol edilecek
 
-const { core } = window.__TAURI__;
-
-// Autostart plugin API'lerini al
+// Autostart plugin API
 let autostartAPI = null;
 if (window.__TAURI__.plugins && window.__TAURI__.plugins.autostart) {
   autostartAPI = window.__TAURI__.plugins.autostart;
@@ -26,399 +17,167 @@ export const elements = {
   searchInput: document.getElementById("search-input"),
   clearSearchBtn: document.getElementById("clear-search"),
   totalItems: document.getElementById("total-items"),
-  lastUpdated: document.getElementById("last-updated"),
   loading: document.getElementById("loading"),
   emptyState: document.getElementById("empty-state"),
   noResults: document.getElementById("no-results"),
   toast: document.getElementById("toast"),
-  // Navigation elements
+  // Navigation
   historyTab: document.getElementById("history-tab"),
   importexportTab: document.getElementById("importexport-tab"),
   settingsTab: document.getElementById("settings-tab"),
   historyPage: document.getElementById("history-page"),
   settingsPage: document.getElementById("settings-page"),
-  settingsBtn: document.getElementById("settings-btn"),
-  // Settings elements
-  languageToggle: document.getElementById("language-toggle"),
-  languageMenu: document.getElementById("language-menu"),
-  saveSettingsBtn: document.getElementById("save-settings"),
-  resetSettingsBtn: document.getElementById("reset-settings"),
-  // Settings form elements
-  maxHistorySelect: document.getElementById("max-history"),
-  autoClearSelect: document.getElementById("auto-clear"),
-  showNotificationsCheckbox: document.getElementById("show-notifications"),
-  soundEnabledCheckbox: document.getElementById("sound-enabled"),
-  themeSelect: document.getElementById("theme-select"),
-  compactModeCheckbox: document.getElementById("compact-mode"),
-  autostartCheckbox: document.getElementById("autostart-enabled")
+  // Settings
+  autostartCheckbox: document.getElementById("autostart-enabled"),
+  languageSelector: document.getElementById("language-selector"),
+  themeSelector: document.getElementById("theme-selector")
 };
 
-// Dil sistemi
+// i18n
 let i18n;
 
-// Dil sistemi başlat
 export function initI18n() {
-  console.log('initI18n called');
-  
-  // i18n fonksiyonlarını global olarak erişilebilir yap
+  const originalI18n = window.i18n;
   i18n = {
-    t: window.i18n.t,
-    _: window.i18n._,
-    setLanguage: window.i18n.setLanguage,
-    getCurrentLanguage: window.i18n.getCurrentLanguage,
-    getSupportedLanguages: window.i18n.getSupportedLanguages,
-    initLanguageDropdown: window.i18n.initLanguageDropdown,
-    updateCurrentLanguage: window.i18n.updateCurrentLanguage
+    t: originalI18n.t,
+    tSync: originalI18n.tSync,
+    setLanguage: originalI18n.setLanguage,
+    getCurrentLanguage: originalI18n.getCurrentLanguage,
+    getSupportedLanguages: originalI18n.getSupportedLanguages,
+    updateCurrentLanguageUI: originalI18n.updateCurrentLanguageUI
   };
-  
   window.i18n = i18n;
   
-  console.log('i18n loaded successfully');
-  
-  // Dil dropdown'ını başlat
-  initLanguageDropdown();
-  
-  // Sayfa metinlerini güncelle
-  updatePageTexts();
-  
-  // Navigasyon sistemini başlat
   initNavigation();
-  
-  // Ayarlar sistemini başlat
   initSettings();
-
-  // Import/Export sayfası fonksiyonları
   initImportExport();
+  updatePageTexts();
 }
 
-// Navigasyon sistemi
+// Navigation
 export function initNavigation() {
-  // Tab click handlers
   if (elements.historyTab) elements.historyTab.addEventListener('click', () => switchPage('history'));
   if (elements.importexportTab) elements.importexportTab.addEventListener('click', () => switchPage('importexport'));
   if (elements.settingsTab) elements.settingsTab.addEventListener('click', () => switchPage('settings'));
-  if (elements.settingsBtn) elements.settingsBtn.addEventListener('click', () => switchPage('settings'));
 }
 
-// Sayfa değiştirme
 export function switchPage(pageName) {
-  // Tüm sayfaları gizle
-  document.querySelectorAll('.page').forEach(page => {
-    page.classList.remove('active');
-  });
+  document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(tab => tab.classList.remove('active'));
   
-  // Tüm tabları pasif yap
-  document.querySelectorAll('.nav-tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  
-  // İlgili sayfayı ve tabı aktif yap
   const targetPage = document.getElementById(`${pageName}-page`);
   const targetTab = document.getElementById(`${pageName}-tab`);
   
   if (targetPage) targetPage.classList.add('active');
   if (targetTab) targetTab.classList.add('active');
   
-  // Sayfa değiştiğinde gerekli işlemleri yap
   if (pageName === 'history') {
-    // History sayfasına geçerken clipboard geçmişini yenile
     loadClipboardHistory();
-  } else if (pageName === 'importexport') {
-    // Import/Export sayfasına geçerken metinleri güncelle
-    updateImportExportTexts();
   } else if (pageName === 'settings') {
-    // Settings sayfasına geçerken ayarları yükle
     loadSettings();
   }
 }
 
-// Ayarlar sistemi
+// Settings
 export function initSettings() {
-  // Dil dropdown
-  if (elements.languageToggle && elements.languageMenu) {
-    elements.languageToggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const dropdown = elements.languageToggle.closest('.language-dropdown');
-      dropdown.classList.toggle('open');
-    });
-    
-    // Dil seçenekleri
-    const options = elements.languageMenu.querySelectorAll('.language-option');
-    options.forEach(option => {
-      option.addEventListener('click', async function() {
+  // Language buttons
+  if (elements.languageSelector) {
+    const langButtons = elements.languageSelector.querySelectorAll('.language-btn');
+    langButtons.forEach(btn => {
+      btn.addEventListener('click', async function() {
         const lang = this.dataset.lang;
-        console.log('Language selected:', lang);
+        langButtons.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
         
-        // Dil değiştir
         if (window.i18n && window.i18n.setLanguage) {
           await window.i18n.setLanguage(lang);
-        } else {
-          // Fallback: sayfayı yenile
           localStorage.setItem('language', lang);
-          window.location.reload();
+          await updatePageTexts();
         }
-        
-        // Dropdown'ı kapat
-        const dropdown = elements.languageToggle.closest('.language-dropdown');
-        dropdown.classList.remove('open');
       });
     });
-    
-    // Dışarı tıklayınca kapat
-    document.addEventListener('click', function(e) {
-      const dropdown = elements.languageToggle.closest('.language-dropdown');
-      if (dropdown && !dropdown.contains(e.target)) {
-        dropdown.classList.remove('open');
-      }
-    });
-    
-    // ESC ile kapat
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        const dropdown = elements.languageToggle.closest('.language-dropdown');
-        if (dropdown) dropdown.classList.remove('open');
-      }
+  }
+  
+  // Theme buttons
+  if (elements.themeSelector) {
+    const themeButtons = elements.themeSelector.querySelectorAll('.theme-btn');
+    themeButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const theme = this.dataset.theme;
+        themeButtons.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        applyTheme(theme);
+        localStorage.setItem('theme', theme);
+      });
     });
   }
   
-  // Ayarları kaydet
-  if (elements.saveSettingsBtn) {
-    elements.saveSettingsBtn.addEventListener('click', saveSettings);
+  // Autostart toggle
+  if (elements.autostartCheckbox) {
+    elements.autostartCheckbox.addEventListener('change', async function() {
+      try {
+        if (this.checked) {
+          if (autostartAPI && autostartAPI.enable) {
+            await autostartAPI.enable();
+          } else {
+            await invoke('plugin:autostart|enable');
+          }
+          showToast('Autostart enabled', 'success');
+        } else {
+          if (autostartAPI && autostartAPI.disable) {
+            await autostartAPI.disable();
+          } else {
+            await invoke('plugin:autostart|disable');
+          }
+          showToast('Autostart disabled', 'success');
+        }
+      } catch (error) {
+        console.error('Autostart error:', error);
+        this.checked = !this.checked;
+      }
+    });
   }
-  
-  // Ayarları sıfırla
-  if (elements.resetSettingsBtn) {
-    elements.resetSettingsBtn.addEventListener('click', resetSettings);
-  }
-  
 }
 
-// Ayarları yükle
 export async function loadSettings() {
-  const settings = getStoredSettings();
-  // Form elemanlarını doldur
-  if (elements.maxHistorySelect) {
-    elements.maxHistorySelect.value = settings.maxHistory || '500';
-  }
-  if (elements.autoClearSelect) {
-    elements.autoClearSelect.value = settings.autoClear || 'never';
-  }
-  if (elements.showNotificationsCheckbox) {
-    elements.showNotificationsCheckbox.checked = settings.showNotifications !== false;
-  }
-  if (elements.soundEnabledCheckbox) {
-    elements.soundEnabledCheckbox.checked = settings.soundEnabled || false;
-  }
-  if (elements.themeSelect) {
-    elements.themeSelect.value = settings.theme || 'auto';
-  }
-  if (elements.compactModeCheckbox) {
-    elements.compactModeCheckbox.checked = settings.compactMode || false;
+  // Load current language
+  const currentLang = localStorage.getItem('language') || 'en';
+  if (elements.languageSelector) {
+    elements.languageSelector.querySelectorAll('.language-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === currentLang);
+    });
   }
   
-  // Autostart durumunu kontrol et
+  // Load current theme
+  const currentTheme = localStorage.getItem('theme') || 'auto';
+  if (elements.themeSelector) {
+    elements.themeSelector.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.theme === currentTheme);
+    });
+  }
+  
+  // Load autostart status
   if (elements.autostartCheckbox) {
     try {
-      // Farklı API çağırma yöntemlerini dene
       let enabled = false;
-      
-      // Yöntem 1: Plugin API
       if (autostartAPI && autostartAPI.isEnabled) {
         enabled = await autostartAPI.isEnabled();
-      } 
-      // Yöntem 2: Invoke ile
-      else {
+      } else {
         try {
           enabled = await invoke('plugin:autostart|is_enabled');
-        } catch (e1) {
-          // Yöntem 3: Direkt komut
-          try {
-            enabled = await invoke('is_enabled');
-          } catch (e2) {
-            console.log('Autostart API bulunamadı, varsayılan olarak false');
-            enabled = false;
-          }
+        } catch (e) {
+          enabled = false;
         }
       }
-      
       elements.autostartCheckbox.checked = enabled;
-      console.log('Autostart durumu:', enabled);
     } catch (error) {
-      console.error('Autostart durumu kontrol edilemedi:', error);
       elements.autostartCheckbox.checked = false;
     }
   }
 }
 
-// Ayarları kaydet
-export async function saveSettings() {
-  try {
-    const settings = {
-      maxHistory: elements.maxHistorySelect?.value || '500',
-      autoClear: elements.autoClearSelect?.value || 'never',
-      showNotifications: elements.showNotificationsCheckbox?.checked !== false,
-      soundEnabled: elements.soundEnabledCheckbox?.checked || false,
-      theme: elements.themeSelect?.value || 'auto',
-      compactMode: elements.compactModeCheckbox?.checked || false
-    };
-    
-    // Autostart ayarını uygula
-    if (elements.autostartCheckbox) {
-      try {
-        // Mevcut durumu kontrol et
-        let currentAutostart = false;
-        if (autostartAPI && autostartAPI.isEnabled) {
-          currentAutostart = await autostartAPI.isEnabled();
-        } else {
-          try {
-            currentAutostart = await invoke('plugin:autostart|is_enabled');
-          } catch (e) {
-            try {
-              currentAutostart = await invoke('is_enabled');
-            } catch (e2) {
-              console.log('Autostart durumu okunamadı');
-            }
-          }
-        }
-        
-        const newAutostart = elements.autostartCheckbox.checked;
-        console.log('Autostart değişikliği:', currentAutostart, '->', newAutostart);
-        
-        if (currentAutostart !== newAutostart) {
-          if (newAutostart) {
-            // Etkinleştir
-            if (autostartAPI && autostartAPI.enable) {
-              await autostartAPI.enable();
-            } else {
-              try {
-                await invoke('plugin:autostart|enable');
-              } catch (e) {
-                await invoke('enable');
-              }
-            }
-            console.log('Autostart etkinleştirildi');
-            showToast('Windows ile otomatik başlatma etkinleştirildi', 'success');
-          } else {
-            // Devre dışı bırak
-            if (autostartAPI && autostartAPI.disable) {
-              await autostartAPI.disable();
-            } else {
-              try {
-                await invoke('plugin:autostart|disable');
-              } catch (e) {
-                await invoke('disable');
-              }
-            }
-            console.log('Autostart devre dışı bırakıldı');
-            showToast('Windows ile otomatik başlatma devre dışı bırakıldı', 'success');
-          }
-        }
-      } catch (error) {
-        console.error('Autostart ayarı uygulanamadı:', error);
-        showToast('Autostart ayarı uygulanamadı: ' + error, 'error');
-      }
-    }
-    
-    // LocalStorage'a kaydet
-    localStorage.setItem('clipcrab_settings', JSON.stringify(settings));
-    // Tema değişikliğini uygula
-    applyTheme(settings.theme);
-    // Kompakt mod değişikliğini uygula
-    applyCompactMode(settings.compactMode);
-    // Başarı mesajı göster
-    const savedText = await window.i18n.t('settings.actions.saved');
-    showToast(savedText, 'success');
-    console.log('Settings saved:', settings);
-  } catch (error) {
-    console.error('Error saving settings:', error);
-    const errorText = await window.i18n.t('errors.save_settings_failed');
-    showToast(errorText, 'error');
-  }
-}
-
-// Ayarları sıfırla
-export async function resetSettings() {
-  try {
-    const resetConfirmText = await window.i18n.t('settings.actions.reset_confirm');
-    if (!confirm(resetConfirmText)) {
-      return;
-    }
-    // Varsayılan ayarları yükle
-    const defaultSettings = {
-      maxHistory: '500',
-      autoClear: 'never',
-      showNotifications: true,
-      soundEnabled: false,
-      theme: 'auto',
-      compactMode: false
-    };
-    
-    // Autostart'ı devre dışı bırak
-    try {
-      if (autostartAPI && autostartAPI.disable) {
-        await autostartAPI.disable();
-      } else {
-        try {
-          await invoke('plugin:autostart|disable');
-        } catch (e) {
-          await invoke('disable');
-        }
-      }
-      console.log('Reset: Autostart devre dışı bırakıldı');
-    } catch (error) {
-      console.error('Autostart devre dışı bırakılamadı:', error);
-    }
-    
-    // LocalStorage'dan sil
-    localStorage.removeItem('clipcrab_settings');
-    // Form elemanlarını sıfırla
-    loadSettings();
-    // Tema ve kompakt modu sıfırla
-    applyTheme('auto');
-    applyCompactMode(false);
-    // Başarı mesajı göster
-    const resetSuccessText = await window.i18n.t('settings.actions.reset_success');
-    showToast(resetSuccessText, 'success');
-    console.log('Settings reset to default');
-  } catch (error) {
-    console.error('Error resetting settings:', error);
-  }
-}
-
-// Kaydedilmiş ayarları al
-export function getStoredSettings() {
-  try {
-    const stored = localStorage.getItem('clipcrab_settings');
-    const defaultSettings = {
-      maxHistory: '500',
-      autoClear: 'never',
-      showNotifications: true,
-      soundEnabled: false,
-      theme: 'auto',
-      compactMode: false,
-      autostartEnabled: true // Varsayılan olarak autostart aktif
-    };
-    
-    return stored ? { ...defaultSettings, ...JSON.parse(stored) } : defaultSettings;
-  } catch (error) {
-    console.error('Error loading stored settings:', error);
-    return {
-      maxHistory: '500',
-      autoClear: 'never',
-      showNotifications: true,
-      soundEnabled: false,
-      theme: 'auto',
-      compactMode: false,
-      autostartEnabled: true
-    };
-  }
-}
-
-// Tema uygula
 export function applyTheme(theme) {
   const root = document.documentElement;
-  
-  // Mevcut tema sınıflarını kaldır
   root.classList.remove('theme-light', 'theme-dark');
   
   if (theme === 'light') {
@@ -426,232 +185,100 @@ export function applyTheme(theme) {
   } else if (theme === 'dark') {
     root.classList.add('theme-dark');
   } else {
-    // Auto tema - sistem temasını kullan
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     if (prefersDark) {
       root.classList.add('theme-dark');
-    } else {
-      root.classList.add('theme-light');
     }
   }
 }
 
-// Kompakt mod uygula
-export function applyCompactMode(compact) {
-  const appContainer = document.querySelector('.app-container');
-  if (compact) {
-    appContainer.classList.add('compact-mode');
-  } else {
-    appContainer.classList.remove('compact-mode');
-  }
-}
+// Initialize theme on load
+const savedTheme = localStorage.getItem('theme') || 'auto';
+applyTheme(savedTheme);
 
-// Sayfa metinlerini güncelle
+// Update texts
 export async function updatePageTexts() {
   await waitForI18n();
   
-  // Header
-  if (document.querySelector('.logo h1')) document.querySelector('.logo h1').textContent = await window.i18n.t('app.title');
-  if (document.querySelector('#refresh span')) document.querySelector('#refresh span').textContent = await window.i18n.t('header.refresh');
-  if (document.querySelector('#clear-all span')) document.querySelector('#clear-all span').textContent = await window.i18n.t('header.clear_all');
-  if (document.querySelector('#settings-btn span')) document.querySelector('#settings-btn span').textContent = await window.i18n.t('header.settings');
-  
   // Navigation
-  if (document.querySelector('#history-tab span')) document.querySelector('#history-tab span').textContent = await window.i18n.t('navigation.history');
-  if (document.querySelector('#importexport-tab span')) document.querySelector('#importexport-tab span').textContent = await window.i18n.t('navigation.importexport');
-  if (document.querySelector('#settings-tab span')) document.querySelector('#settings-tab span').textContent = await window.i18n.t('navigation.settings');
+  const historyTab = document.querySelector('#history-tab span');
+  const importexportTab = document.querySelector('#importexport-tab span');
+  const settingsTab = document.querySelector('#settings-tab span');
+  
+  if (historyTab) historyTab.textContent = await window.i18n.t('navigation.history');
+  if (importexportTab) importexportTab.textContent = await window.i18n.t('navigation.importexport');
+  if (settingsTab) settingsTab.textContent = await window.i18n.t('navigation.settings');
   
   // Search
-  if (document.querySelector('#search-input')) document.querySelector('#search-input').placeholder = await window.i18n.t('search.placeholder');
+  if (elements.searchInput) {
+    elements.searchInput.placeholder = await window.i18n.t('search.placeholder');
+  }
   
-  // Stats
-  if (document.querySelector('.stat-item:nth-child(1) label')) document.querySelector('.stat-item:nth-child(1) label').textContent = await window.i18n.t('stats.total_items');
-  if (document.querySelector('.stat-item:nth-child(2) label')) document.querySelector('.stat-item:nth-child(2) label').textContent = await window.i18n.t('stats.last_updated');
+  // Loading states
+  const loadingText = document.querySelector('#loading p');
+  const emptyTitle = document.querySelector('#empty-state h3');
+  const emptyText = document.querySelector('#empty-state p');
+  const noResultsTitle = document.querySelector('#no-results h3');
+  const noResultsText = document.querySelector('#no-results p');
   
-  // Loading
-  if (document.querySelector('#loading span')) document.querySelector('#loading span').textContent = await window.i18n.t('loading.message');
+  if (loadingText) loadingText.textContent = await window.i18n.t('loading.message');
+  if (emptyTitle) emptyTitle.textContent = await window.i18n.t('empty_state.title');
+  if (emptyText) emptyText.textContent = await window.i18n.t('empty_state.message');
+  if (noResultsTitle) noResultsTitle.textContent = await window.i18n.t('no_results.title');
+  if (noResultsText) noResultsText.textContent = await window.i18n.t('no_results.message');
   
-  // Empty state
-  if (document.querySelector('#empty-state h3')) document.querySelector('#empty-state h3').textContent = await window.i18n.t('empty_state.title');
-  if (document.querySelector('#empty-state p')) document.querySelector('#empty-state p').textContent = await window.i18n.t('empty_state.message');
-  
-  // No results
-  if (document.querySelector('#no-results h3')) document.querySelector('#no-results h3').textContent = await window.i18n.t('no_results.title');
-  if (document.querySelector('#no-results p')) document.querySelector('#no-results p').textContent = await window.i18n.t('no_results.message');
-  
-  // Import/Export page texts
-  updateImportExportTexts();
-  
-  // Settings page texts
-  updateSettingsTexts();
-  
-  // Select options
-  updateSelectOptions();
-  
-  // Mevcut clipboard öğelerini yeniden render et
+  // Re-render history
   await renderHistory();
-  if (window.i18n && window.i18n.updateCurrentLanguageUI) {
-    window.i18n.updateCurrentLanguageUI();
-  }
 }
 
-// Import/Export sayfası metinlerini güncelle
-export async function updateImportExportTexts() {
-  await waitForI18n();
-  
-  // Import/Export title
-  if (document.querySelector('.importexport-title')) {
-    document.querySelector('.importexport-title').textContent = await window.i18n.t('importexport.title');
-  }
-  
-  // Import/Export description
-  if (document.querySelector('.importexport-desc span')) {
-    document.querySelector('.importexport-desc span').textContent = await window.i18n.t('importexport.desc');
-  }
-  
-  // Export button
-  if (document.querySelector('.export-label')) {
-    document.querySelector('.export-label').textContent = await window.i18n.t('importexport.export');
-  }
-  if (document.querySelector('#export-json small')) {
-    document.querySelector('#export-json small').textContent = await window.i18n.t('importexport.export_desc');
-  }
-  
-  // Import button
-  if (document.querySelector('.import-label')) {
-    document.querySelector('.import-label').textContent = await window.i18n.t('importexport.import');
-  }
-  if (document.querySelector('#import-json small')) {
-    document.querySelector('#import-json small').textContent = await window.i18n.t('importexport.import_desc');
-  }
-}
-
-// Ayarlar sayfası metinlerini güncelle
-export async function updateSettingsTexts() {
-  await waitForI18n();
-  
-  // Settings sections
-  const sections = document.querySelectorAll('.settings-section h2');
-  if (sections.length >= 5) {
-    sections[0].innerHTML = `<i class="fas fa-globe"></i> ${await window.i18n.t('settings.language.title')}`;
-    sections[1].innerHTML = `<i class="fas fa-shield-alt"></i> ${await window.i18n.t('settings.privacy.title')}`;
-    sections[2].innerHTML = `<i class="fas fa-sliders-h"></i> ${await window.i18n.t('settings.general.title')}`;
-    sections[3].innerHTML = `<i class="fas fa-bell"></i> ${await window.i18n.t('settings.notifications.title')}`;
-    sections[4].innerHTML = `<i class="fas fa-palette"></i> ${await window.i18n.t('settings.appearance.title')}`;
-  }
-  
-  // Settings labels
-  const labels = document.querySelectorAll('.setting-item label span');
-  if (labels.length >= 8) {
-    labels[0].textContent = await window.i18n.t('settings.privacy.auto_start');
-    labels[1].textContent = await window.i18n.t('settings.privacy.encrypt_data');
-    labels[2].textContent = await window.i18n.t('settings.general.max_history');
-    labels[3].textContent = await window.i18n.t('settings.general.auto_clear');
-    labels[4].textContent = await window.i18n.t('settings.notifications.show_notifications');
-    labels[5].textContent = await window.i18n.t('settings.notifications.sound_enabled');
-    labels[6].textContent = await window.i18n.t('settings.appearance.theme');
-    labels[7].textContent = await window.i18n.t('settings.appearance.compact_mode');
-  }
-  
-  // Action buttons
-  if (document.querySelector('#save-settings span')) document.querySelector('#save-settings span').textContent = await window.i18n.t('settings.actions.save');
-  if (document.querySelector('#reset-settings span')) document.querySelector('#reset-settings span').textContent = await window.i18n.t('settings.actions.reset');
-  
-  // Select options
-  updateSelectOptions();
-}
-
-// Select option'larını güncelle
-export async function updateSelectOptions() {
-  await waitForI18n();
-  
-  // Max history options
-  const maxHistoryOptions = document.querySelectorAll('#max-history option');
-  maxHistoryOptions.forEach(option => {
-    const key = option.getAttribute('data-i18n');
-    if (key) {
-      option.textContent = window.i18n.tSync(key);
-    }
-  });
-  
-  // Auto clear options
-  const autoClearOptions = document.querySelectorAll('#auto-clear option');
-  autoClearOptions.forEach(option => {
-    const key = option.getAttribute('data-i18n');
-    if (key) {
-      option.textContent = window.i18n.tSync(key);
-    }
-  });
-}
-
-// Global olarak erişilebilir yap
-window.updatePageTexts = updatePageTexts;
-window.switchPage = switchPage;
-
-// UI Functions
+// Create history item
 export async function createHistoryItem(item, index) {
   await waitForI18n();
-  const li = document.createElement("li");
-  li.className = "history-item fade-in";
-  li.style.animationDelay = `${index * 0.1}s`;
+  const div = document.createElement("div");
+  div.className = "history-item fade-in";
+  div.style.animationDelay = `${index * 0.05}s`;
   
-  const isLongText = item.content.length > 200 && item.content_type !== 'image';
-  const textIcon = getTextIcon(item.content, item.content_type);
   const timeAgo = await formatTimeAgo(item.created_at);
-  const fullDateTime = new Date(item.created_at).toLocaleString();
+  const typeLabel = await getTextTypeLabel(item.content, item.content_type);
+  const textIcon = getTextIcon(item.content, item.content_type);
+  
   const copyText = await window.i18n.t('clipboard.copy');
   const deleteText = await window.i18n.t('clipboard.delete');
-  const expandText = await window.i18n.t('clipboard.expand');
-  const collapseText = await window.i18n.t('clipboard.collapse');
-  const karakterText = await window.i18n.t('stats.total_items');
-  const typeLabel = await getTextTypeLabel(item.content, item.content_type);
-  const pinText = await window.i18n.t('clipboard.pin');
-  const unpinText = await window.i18n.t('clipboard.unpin');
-
-  // Resim içeriği için özel HTML
-  const contentHtml = item.content_type === 'image' && item.image_data 
-    ? `<div class="image-content">
-         <img src="data:image/png;base64,${item.image_data}" alt="Clipboard image" />
-         <div class="image-info">${item.content}</div>
-       </div>`
-    : `<div class="history-content ${isLongText ? '' : 'expanded'}">${item.content}</div>`;
+  const pinText = item.pinned ? await window.i18n.t('clipboard.unpin') : await window.i18n.t('clipboard.pin');
   
-  li.innerHTML = `
+  // Content
+  let contentHtml = '';
+  if (item.content_type === 'image' && item.image_data) {
+    contentHtml = `<img src="data:image/png;base64,${item.image_data}" alt="Image" class="image-preview" />`;
+  } else {
+    contentHtml = `<div class="content line-clamp-3">${escapeHtml(item.content)}</div>`;
+  }
+  
+  div.innerHTML = `
+    ${item.pinned ? '<i class="fas fa-thumbtack pin-badge"></i>' : ''}
     ${contentHtml}
-    <div class="history-actions">
-      <div class="history-meta">
-        <span title="${fullDateTime}"><i class="fas fa-calendar"></i>${timeAgo}</span>
-        <span><i class="fas fa-ruler-horizontal"></i>${item.content.length} ${karakterText}</span>
-        <span><i class="${textIcon}"></i>${typeLabel}</span>
-      </div>
-      <div class="history-buttons">
-        <button class="btn-pin-icon btn-pin ${item.pinned ? 'pinned' : ''}" title="${item.pinned ? unpinText : pinText}">
+    <div class="meta">
+      <span class="meta-item"><i class="fas fa-clock"></i>${timeAgo}</span>
+      <span class="meta-item"><i class="${textIcon}"></i>${typeLabel}</span>
+      <span class="meta-item"><i class="fas fa-text-width"></i>${item.content.length}</span>
+      <div class="actions">
+        <button class="action-btn pin ${item.pinned ? 'pinned' : ''}" title="${pinText}">
           <i class="fas fa-thumbtack"></i>
         </button>
-        <button class="btn-small btn-copy" title="${copyText}">
+        <button class="action-btn copy" title="${copyText}">
           <i class="fas fa-copy"></i>
-          ${copyText}
         </button>
-        ${isLongText ? `
-          <button class="btn-small btn-expand" title="${expandText}">
-            <i class="fas fa-expand-alt"></i>
-            ${expandText}
-          </button>
-        ` : ''}
-        <button class="btn-small btn-delete" title="${deleteText}">
+        <button class="action-btn delete" title="${deleteText}">
           <i class="fas fa-trash"></i>
-          ${deleteText}
         </button>
       </div>
     </div>
   `;
   
-  // Event listeners
-  const pinBtn = li.querySelector('.btn-pin');
-  const copyBtn = li.querySelector('.btn-copy');
-  const expandBtn = li.querySelector('.btn-expand');
-  const deleteBtn = li.querySelector('.btn-delete');
-  const content = li.querySelector('.history-content');
+  // Events
+  const pinBtn = div.querySelector('.action-btn.pin');
+  const copyBtn = div.querySelector('.action-btn.copy');
+  const deleteBtn = div.querySelector('.action-btn.delete');
   
   pinBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -663,62 +290,42 @@ export async function createHistoryItem(item, index) {
     copyToClipboard(item.content, item.content_type, item.image_data);
   });
   
-  if (expandBtn) {
-    expandBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      content.classList.toggle('expanded');
-      const icon = expandBtn.querySelector('i');
-      
-      if (content.classList.contains('expanded')) {
-        expandBtn.innerHTML = `<i class="fas fa-compress-alt"></i> ${collapseText}`;
-      } else {
-        expandBtn.innerHTML = `<i class="fas fa-expand-alt"></i> ${expandText}`;
-      }
-    });
-  }
-  
   deleteBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     showDeleteConfirmation(item);
   });
   
-  // Click to copy
-  li.addEventListener('click', (e) => {
-    // Sadece ana öğeye tıklanırsa modal aç
-    if (
-      !e.target.closest('.btn-copy') &&
-      !e.target.closest('.btn-delete') &&
-      !e.target.closest('.btn-pin') &&
-      !e.target.closest('.btn-expand')
-    ) {
-      showMessageModal(item);
-    }
+  div.addEventListener('click', () => {
+    showMessageModal(item);
   });
   
-  return li;
+  return div;
 }
 
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Delete confirmation
 export async function showDeleteConfirmation(item) {
   await waitForI18n();
   const title = await window.i18n.t('modal.delete_title');
   const message = await window.i18n.t('modal.delete_message');
-  const contentLabel = await window.i18n.t('modal.content');
   const cancel = await window.i18n.t('modal.cancel');
   const confirm = await window.i18n.t('modal.confirm');
-
+  
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   modal.innerHTML = `
     <div class="modal">
       <div class="modal-header">
-        <h3><i class="fas fa-exclamation-triangle"></i> ${title}</h3>
+        <h3><i class="fas fa-triangle-exclamation" style="color: var(--danger)"></i> ${title}</h3>
       </div>
       <div class="modal-body">
         <p>${message}</p>
-        <div class="preview-content">
-          <strong>${contentLabel}</strong>
-          <div class="content-preview">${truncateText(item.content, 100)}</div>
-        </div>
+        <div class="content-preview">${escapeHtml(truncateText(item.content, 150))}</div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" id="cancel-delete">${cancel}</button>
@@ -729,34 +336,103 @@ export async function showDeleteConfirmation(item) {
   
   document.body.appendChild(modal);
   
-  // Event listeners
   modal.querySelector('#cancel-delete').addEventListener('click', () => {
     document.body.removeChild(modal);
   });
   
   modal.querySelector('#confirm-delete').addEventListener('click', async () => {
-    try {
-      await deleteHistoryItem(item.id);
-      document.body.removeChild(modal);
-      // UI zaten deleteHistoryItem içinde güncelleniyor
-    } catch (error) {
-      showToast('Delete operation failed!', 'error');
-    }
+    await deleteHistoryItem(item.id);
+    document.body.removeChild(modal);
   });
   
-  // Close on overlay click
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      document.body.removeChild(modal);
-    }
+    if (e.target === modal) document.body.removeChild(modal);
   });
 }
 
-export async function renderHistory() {
+// Message modal
+export async function showMessageModal(item) {
   await waitForI18n();
-  const itemsToRender = getSearchQuery() ? getFilteredHistory() : getClipboardHistory();
+  const copyText = await window.i18n.t('clipboard.copy');
+  const deleteText = await window.i18n.t('clipboard.delete');
+  const pinText = item.pinned ? await window.i18n.t('clipboard.unpin') : await window.i18n.t('clipboard.pin');
   
-  elements.historyList.innerHTML = '';
+  const timeAgo = await formatTimeAgo(item.created_at);
+  const typeLabel = await getTextTypeLabel(item.content, item.content_type);
+  const textIcon = getTextIcon(item.content, item.content_type);
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal message-modal">
+      <div class="modal-header">
+        <h3><i class="${textIcon}" style="color: var(--accent)"></i> ${typeLabel}</h3>
+        <button class="btn-icon" id="close-modal"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="message-content">
+          ${item.content_type === 'image' && item.image_data
+            ? `<img src="data:image/png;base64,${item.image_data}" alt="Image" />`
+            : `<pre>${escapeHtml(item.content)}</pre>`}
+        </div>
+        <div class="message-meta">
+          <span class="meta-item"><i class="fas fa-clock"></i>${timeAgo}</span>
+          <span class="meta-item"><i class="fas fa-text-width"></i>${item.content.length} chars</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="modal-pin">
+          <i class="fas fa-thumbtack"></i> ${pinText}
+        </button>
+        <button class="btn btn-primary" id="modal-copy">
+          <i class="fas fa-copy"></i> ${copyText}
+        </button>
+        <button class="btn btn-danger" id="modal-delete">
+          <i class="fas fa-trash"></i> ${deleteText}
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  modal.querySelector('#close-modal').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  modal.querySelector('#modal-pin').addEventListener('click', async () => {
+    await togglePin(item.id);
+    document.body.removeChild(modal);
+  });
+  
+  modal.querySelector('#modal-copy').addEventListener('click', () => {
+    copyToClipboard(item.content, item.content_type, item.image_data);
+  });
+  
+  modal.querySelector('#modal-delete').addEventListener('click', async () => {
+    document.body.removeChild(modal);
+    await showDeleteConfirmation(item);
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) document.body.removeChild(modal);
+  });
+}
+
+// Render history
+let renderedCount = 0;
+
+export async function renderHistory(appendMode = false) {
+  await waitForI18n();
+  
+  const hasFilterOrSearch = hasActiveFilter() || getSearchQuery();
+  const itemsToRender = hasFilterOrSearch ? getFilteredHistory() : getClipboardHistory();
+  
+  if (!appendMode) {
+    elements.historyList.innerHTML = '';
+    renderedCount = 0;
+    removeLoadingIndicator();
+  }
   
   if (itemsToRender.length === 0) {
     if (getSearchQuery()) {
@@ -772,119 +448,90 @@ export async function renderHistory() {
   elements.emptyState.style.display = 'none';
   elements.noResults.style.display = 'none';
   
-  for (let i = 0; i < itemsToRender.length; i++) {
-    const li = await createHistoryItem(itemsToRender[i], i);
-    elements.historyList.appendChild(li);
+  const startIndex = appendMode ? renderedCount : 0;
+  for (let i = startIndex; i < itemsToRender.length; i++) {
+    const div = await createHistoryItem(itemsToRender[i], i);
+    elements.historyList.appendChild(div);
   }
+  renderedCount = itemsToRender.length;
+  
+  // Loading indicator kontrolü (hasFilterOrSearch zaten yukarıda tanımlı)
+  if (hasFilterOrSearch) {
+    // Filtreli modda - canLoadMoreFiltered kontrolü
+    if (canLoadMoreFiltered()) {
+      addLoadingIndicator();
+    } else {
+      removeLoadingIndicator();
+    }
+  } else {
+    // Normal modda
+    if (canLoadMore()) {
+      addLoadingIndicator();
+    } else {
+      removeLoadingIndicator();
+    }
+  }
+}
+
+function addLoadingIndicator() {
+  removeLoadingIndicator();
+  const indicator = document.createElement('div');
+  indicator.id = 'scroll-loading';
+  indicator.className = 'scroll-loading';
+  indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading more...';
+  elements.historyList.parentElement.appendChild(indicator);
+}
+
+function removeLoadingIndicator() {
+  const existing = document.getElementById('scroll-loading');
+  if (existing) existing.remove();
+}
+
+// Infinite scroll - hem normal hem filtreli mod için
+export function setupInfiniteScroll() {
+  const container = document.querySelector('.content-area');
+  if (!container) return;
+  
+  container.addEventListener('scroll', async () => {
+    const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const isFilterOrSearch = hasActiveFilter() || getSearchQuery();
+    
+    if (scrollBottom < 200) {
+      if (isFilterOrSearch && canLoadMoreFiltered()) {
+        // Filtreli lazy load
+        await loadMoreFilteredItems();
+      } else if (!isFilterOrSearch && canLoadMore()) {
+        // Normal lazy load
+        await loadMoreItems();
+        await renderHistory(true);
+        updateStats();
+      }
+    }
+  });
 }
 
 export function updateStats() {
-  const itemsToCount = getSearchQuery() ? getFilteredHistory() : getClipboardHistory();
-  elements.totalItems.textContent = itemsToCount.length;
-  elements.lastUpdated.textContent = new Date().toLocaleTimeString('tr-TR');
+  const hasFilterOrSearch = hasActiveFilter() || getSearchQuery();
+  const itemsToCount = hasFilterOrSearch ? getFilteredHistory() : getClipboardHistory();
+  const total = getTotalCount();
+  
+  if (total > 0 && itemsToCount.length < total && !getSearchQuery()) {
+    elements.totalItems.textContent = `${itemsToCount.length}/${total}`;
+  } else {
+    elements.totalItems.textContent = itemsToCount.length;
+  }
 }
 
-// Dil dropdown başlat
-export function initLanguageDropdown() {
-  if (window.i18n && window.i18n.initLanguageDropdown) {
-    window.i18n.initLanguageDropdown();
-  }
-} 
-
-// Mesaj detay modalı
-export async function showMessageModal(item) {
-  await waitForI18n();
-  const copyText = await window.i18n.t('clipboard.copy');
-  const deleteText = await window.i18n.t('clipboard.delete');
-  const pinText = await window.i18n.t('clipboard.pin');
-  const unpinText = await window.i18n.t('clipboard.unpin');
-  const closeText = await window.i18n.t('modal.close');
-  const createdAtText = await window.i18n.t('modal.created_at');
-  const characterCountText = await window.i18n.t('modal.character_count');
-  const contentTypeText = await window.i18n.t('modal.content_type');
-  
-  const timeAgo = await formatTimeAgo(item.created_at);
-  const fullDateTime = new Date(item.created_at).toLocaleString();
-  const typeLabel = await getTextTypeLabel(item.content, item.content_type);
-
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.innerHTML = `
-    <div class="modal message-modal">
-      <div class="modal-header modal-header-message-modal">
-        <button class="modal-pin-button ${item.pinned ? 'modal-pin-active' : 'modal-pin-inactive'}" title="${item.pinned ? unpinText : pinText}">
-          <i class="fas fa-thumbtack"></i>
-        </button>
-        <button class="modal-close" title="${closeText}">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="message-content${item.content.length > 300 ? ' scrollable' : ''}">
-          ${item.content_type === 'image' && item.image_data
-            ? `<img src="data:image/png;base64,${item.image_data}" alt="Clipboard image" />`
-            : `<pre>${item.content}</pre>`}
-        </div>
-      </div>
-      <div class="modal-footer modal-footer-row">
-        <div class="modal-info-group">
-          <span class="info-item"><i class="fas fa-calendar"></i><span class="info-value" title="${fullDateTime}">${timeAgo}</span></span>
-          <span class="info-item"><i class="fas fa-ruler-horizontal"></i><span class="info-value">${item.content.length}</span></span>
-          <span class="info-item"><i class="${getTextIcon(item.content, item.content_type)}"></i><span class="info-value">${typeLabel}</span></span>
-        </div>
-        <div class="modal-btn-group">
-          <button class="btn-small btn-copy" title="${copyText}">
-            <i class="fas fa-copy"></i> ${copyText}
-          </button>
-          <button class="btn-small btn-delete" title="${deleteText}">
-            <i class="fas fa-trash"></i> ${deleteText}
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  // Kapatma
-  modal.querySelector('.modal-close').addEventListener('click', () => {
-    document.body.removeChild(modal);
-  });
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) document.body.removeChild(modal);
-  });
-
-  // Butonlar
-  const pinBtn = modal.querySelector('.modal-pin-button');
-  const copyBtn = modal.querySelector('.btn-copy');
-  const deleteBtn = modal.querySelector('.btn-delete');
-
-  pinBtn.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    await togglePin(item.id);
-    document.body.removeChild(modal);
-  });
-  copyBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    copyToClipboard(item.content, item.content_type, item.image_data);
-  });
-  deleteBtn.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    await showDeleteConfirmation(item);
-    document.body.removeChild(modal);
-  });
-} 
-
-// Import/Export sayfası fonksiyonları
+// Import/Export
 export function initImportExport() {
   const exportBtn = document.getElementById('export-json');
   const importBtn = document.getElementById('import-json');
   const importFile = document.getElementById('import-file');
-
+  
   if (exportBtn) {
     exportBtn.addEventListener('click', async () => {
       try {
-        // Clipboard geçmişini Rust tarafından al
         const json = await invoke('export_clipboard_history');
-        // Klasik web indirme yöntemiyle dosya olarak kaydet
         const blob = new Blob([json], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -896,44 +543,40 @@ export function initImportExport() {
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
         }, 100);
-        
-        // Dil desteği ile başarı mesajı
-        const successMessage = await window.i18n.t('importexport.export_success');
-        showToast(successMessage, 'success');
+        showToast('Export successful!', 'success');
       } catch (e) {
-        // Dil desteği ile hata mesajı
-        const errorMessage = await window.i18n.t('importexport.export_error');
-        showToast(e && e.toString ? e.toString() : errorMessage, 'error');
+        showToast('Export failed', 'error');
         console.error('Export error:', e);
       }
     });
   }
-
+  
   if (importBtn && importFile) {
     importBtn.addEventListener('click', () => {
       importFile.value = '';
       importFile.click();
     });
+    
     importFile.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+      
       const reader = new FileReader();
       reader.onload = async (ev) => {
         try {
           const json = ev.target.result;
           const count = await invoke('import_clipboard_history', { jsonData: json });
-          
-          // Dil desteği ile başarı mesajı
-          const successMessage = await window.i18n.t('importexport.import_success', { count: count });
-          showToast(successMessage, 'success');
+          showToast(`Imported ${count} items!`, 'success');
+          await loadClipboardHistory();
         } catch (err) {
-          // Dil desteği ile hata mesajı
-          const errorMessage = await window.i18n.t('importexport.import_error');
-          showToast(errorMessage, 'error');
+          showToast('Import failed', 'error');
         }
       };
       reader.readAsText(file);
     });
   }
 }
-// initI18n içinde veya sayfa geçişlerinde importexport sayfası için de başlatıcı fonksiyonu çağırmayı unutma. 
+
+// Global exports
+window.updatePageTexts = updatePageTexts;
+window.switchPage = switchPage;

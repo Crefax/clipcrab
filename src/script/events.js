@@ -1,5 +1,5 @@
-import { elements } from './ui.js';
-import { loadClipboardHistory, clearAllHistory, setSearchQuery, filterHistory } from './clipboard.js';
+import { elements, setupInfiniteScroll } from './ui.js';
+import { loadClipboardHistory, clearAllHistory, setSearchQuery, filterHistory, toggleContentFilter, getActiveFilters } from './clipboard.js';
 import { showToast } from './utils.js';
 
 // Event Handlers
@@ -33,12 +33,20 @@ export function setupEventListeners() {
   
   // Search functionality
   elements.searchInput.addEventListener("input", (e) => {
-    setSearchQuery(e.target.value);
+    const value = e.target.value;
+    setSearchQuery(value);
+    // Clear butonunu göster/gizle
+    if (elements.clearSearchBtn) {
+      elements.clearSearchBtn.style.display = value.length > 0 ? 'flex' : 'none';
+    }
   });
   
   elements.clearSearchBtn.addEventListener("click", () => {
     elements.searchInput.value = '';
     setSearchQuery('');
+    if (elements.clearSearchBtn) {
+      elements.clearSearchBtn.style.display = 'none';
+    }
   });
   
   // Keyboard shortcuts
@@ -60,6 +68,51 @@ export function setupEventListeners() {
       elements.searchInput.value = '';
       setSearchQuery('');
       elements.searchInput.blur();
+    }
+  });
+  
+  // Infinite scroll kurulumu
+  setupInfiniteScroll();
+  
+  // Kategori filtre butonları
+  setupFilterButtons();
+}
+
+// Filtre butonlarını ayarla - çoklu seçim destekli
+function setupFilterButtons() {
+  const filterButtons = document.querySelectorAll('.filter-chip');
+  
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const filter = btn.dataset.filter;
+      const isCtrlClick = e.ctrlKey || e.metaKey;
+      
+      if (filter === 'all' || !isCtrlClick) {
+        // Normal tıklama veya "all" - tek seçim
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        toggleContentFilter(filter, false);
+      } else {
+        // Ctrl+tıklama - çoklu seçim
+        btn.classList.toggle('active');
+        toggleContentFilter(filter, true);
+        updateFilterButtonStates();
+      }
+    });
+  });
+}
+
+// Filtre buton durumlarını güncelle
+function updateFilterButtonStates() {
+  const filterButtons = document.querySelectorAll('.filter-chip');
+  const activeFilters = getActiveFilters();
+  
+  filterButtons.forEach(btn => {
+    const filter = btn.dataset.filter;
+    if (activeFilters.has(filter)) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
     }
   });
 }

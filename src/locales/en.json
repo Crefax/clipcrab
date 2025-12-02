@@ -65,7 +65,8 @@
     "message": "No items match your search criteria"
   },
   "loading": {
-    "message": "Loading..."
+    "message": "Loading...",
+    "searching": "Searching..."
   },
   "errors": {
     "copy_failed": "Copy failed!",

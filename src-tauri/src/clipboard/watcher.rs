@@ -7,9 +7,50 @@ use image::ImageBuffer;
 use std::{thread, time::Duration};
 use tauri::Emitter;
 
+/// İçeriğin kategorisini belirle (kayıt anında)
+fn detect_category(content: &str) -> &'static str {
+    let content_lower = content.to_lowercase();
+    
+    // URL kontrolü
+    if content_lower.starts_with("http://") || 
+       content_lower.starts_with("https://") || 
+       content_lower.starts_with("www.") {
+        return "url";
+    }
+    
+    // Email kontrolü
+    if content.contains('@') && 
+       content.split('@').count() == 2 &&
+       content.split('@').last().map(|d| d.contains('.')).unwrap_or(false) &&
+       !content.contains(' ') {
+        return "email";
+    }
+    
+    // Code kontrolü
+    if content.contains("function") ||
+       content.contains("const ") ||
+       content.contains("let ") ||
+       content.contains("var ") ||
+       content.contains("def ") ||
+       content.contains("class ") ||
+       content.contains("import ") ||
+       content.contains("fn ") ||
+       content.contains("pub ") ||
+       content.contains("->") ||
+       content.contains("=>") ||
+       (content.contains('{') && content.contains('}')) ||
+       content.contains("#include") ||
+       content.contains("<script") {
+        return "code";
+    }
+    
+    "text"
+}
+
 pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
     thread::spawn(move || {
-        let conn = database::init_db();
+        // Watcher için optimize edilmiş bağlantı kullan
+        let conn = database::init_db_for_watcher();
         let mut clipboard = Clipboard::new().expect("Failed to initialize clipboard");
         let mut last_clip_text = clipboard.get_text().unwrap_or_default();
         let mut last_clip_image = clipboard.get_image().ok();
@@ -20,6 +61,9 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                 if current != last_clip_text && !current.trim().is_empty() {
                     println!("New text content: {}", current);
 
+                    // Kategoriyi belirle (kayıt anında)
+                    let category = detect_category(&current);
+                    
                     // İçeriği şifrele
                     let encrypted_content = match security::encrypt(&current) {
                         Ok(encrypted) => encrypted,
@@ -29,10 +73,10 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                         }
                     };
 
-                    // Veritabanına ekle
+                    // Veritabanına ekle (kategori ile birlikte)
                     let result = conn.execute(
-                        "INSERT INTO clipboard_history (content, content_type, created_at, is_encrypted) VALUES (?1, 'text', datetime('now', 'localtime'), 1)",
-                        [&encrypted_content],
+                        "INSERT INTO clipboard_history (content, content_type, category, created_at, is_encrypted) VALUES (?1, 'text', ?2, datetime('now', 'localtime'), 1)",
+                        [&encrypted_content, &category.to_string()],
                     );
 
                     if result.is_ok() {
@@ -101,9 +145,9 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                         }
                     };
 
-                    // Veritabanına ekle
+                    // Veritabanına ekle (resim kategorisi ile)
                     let result = conn.execute(
-                        "INSERT INTO clipboard_history (content, content_type, image_data, created_at, is_encrypted) VALUES (?1, 'image', ?2, datetime('now', 'localtime'), 1)",
+                        "INSERT INTO clipboard_history (content, content_type, category, image_data, created_at, is_encrypted) VALUES (?1, 'image', 'image', ?2, datetime('now', 'localtime'), 1)",
                         [&encrypted_content, &encrypted_image],
                     );
 

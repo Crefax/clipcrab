@@ -1,30 +1,28 @@
-import { initI18n, updatePageTexts, loadSettings, applyTheme, applyCompactMode, getStoredSettings } from './ui.js';
+import { initI18n, updatePageTexts, loadSettings, applyTheme } from './ui.js';
 import { loadClipboardHistory } from './clipboard.js';
 import { setupEventListeners, setupServiceWorker } from './events.js';
 
 // Main initialization
 window.addEventListener("DOMContentLoaded", async () => {
-  // Load saved settings first
-  const settings = getStoredSettings();
-  
-  // Apply theme and compact mode immediately
-  applyTheme(settings.theme || 'auto');
-  applyCompactMode(settings.compactMode || false);
+  // Apply theme immediately
+  const savedTheme = localStorage.getItem('theme') || 'auto';
+  applyTheme(savedTheme);
   
   // Initialize i18n
   initI18n();
   
-  // Wait for i18n to be ready and update page texts
+  // Setup event listeners early
+  setupEventListeners();
+  
+  // Paralel async işlemler
+  const clipboardPromise = loadClipboardHistory();
+  const firstRunPromise = checkFirstRun();
+  
+  // i18n metinlerini güncelle
   await updatePageTexts();
   
-  // Check if this is first run and show welcome modal
-  await checkFirstRun();
-  
-  // Load clipboard history
-  loadClipboardHistory();
-  
-  // Setup event listeners
-  setupEventListeners();
+  // Paralel işlemlerin bitmesini bekle
+  await Promise.all([clipboardPromise, firstRunPromise]);
   
   // Setup service worker
   setupServiceWorker();

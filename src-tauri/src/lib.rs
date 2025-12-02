@@ -96,19 +96,25 @@ pub fn run() {
                 eprintln!("Tray icon setup failed: {}", e);
             }
 
+            // Veritabanı migration'ını çalıştır
+            let _ = commands::force_update_categories();
+
             clipboard::start_clipboard_watcher(app.handle().clone());
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_clipboard_history,
+            commands::get_clipboard_count,
+            commands::search_clipboard_history,
             commands::delete_clipboard_item,
             commands::clear_all_history,
             commands::toggle_pin,
             commands::export_clipboard_history,
             commands::import_clipboard_history,
             commands::is_first_run,
-            commands::complete_first_run
+            commands::complete_first_run,
+            commands::force_update_categories
         ])
         .run(tauri::generate_context!())
         .expect("Failed to start Tauri application");

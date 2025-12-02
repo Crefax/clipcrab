@@ -70,7 +70,8 @@
     "message": "Arama kriterlerinize uygun öğe bulunamadı"
   },
   "loading": {
-    "message": "Yükleniyor..."
+    "message": "Yükleniyor...",
+    "searching": "Aranıyor..."
   },
   "settings": {
     "language": {
