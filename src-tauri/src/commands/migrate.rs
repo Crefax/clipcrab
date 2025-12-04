@@ -44,7 +44,7 @@ pub fn force_update_categories() -> String {
             content
         };
         
-        // Kategoriyi hesapla
+        // Kategoriyi hesapla-
         let category = detect_category(&decrypted);
         
         match category {

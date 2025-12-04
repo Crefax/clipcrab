@@ -53,6 +53,17 @@
   color: white;
 }
 
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #16a34a;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--text-secondary);
@@ -712,6 +723,20 @@
 .badge-image {
   background: rgba(168, 85, 247, 0.1);
   color: #a855f7;
+}
+
+/* ========== Update Status ========== */
+.update-status {
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.update-status strong {
+  color: var(--success);
 }
 
 .badge-code {

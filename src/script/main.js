@@ -1,6 +1,7 @@
 import { initI18n, updatePageTexts, loadSettings, applyTheme } from './ui.js';
 import { loadClipboardHistory } from './clipboard.js';
 import { setupEventListeners, setupServiceWorker } from './events.js';
+import { initUpdater } from './updater.js';
 
 // Main initialization
 window.addEventListener("DOMContentLoaded", async () => {
@@ -13,6 +14,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Setup event listeners early
   setupEventListeners();
+  
+  // Initialize updater
+  initUpdater();
   
   // Paralel async işlemler
   const clipboardPromise = loadClipboardHistory();

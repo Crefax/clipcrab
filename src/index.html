@@ -224,6 +224,27 @@
                 </div>
               </div>
 
+              <!-- Updates -->
+              <div class="setting-card">
+                <div class="setting-header">
+                  <i class="fas fa-cloud-arrow-down"></i>
+                  <h3>Updates</h3>
+                </div>
+                <div class="setting-content">
+                  <div id="update-status" class="update-status">
+                    <span id="update-message">Click to check for updates</span>
+                  </div>
+                  <button id="check-update" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i>
+                    Check for Updates
+                  </button>
+                  <button id="install-update" class="btn btn-success" style="display: none;">
+                    <i class="fas fa-download"></i>
+                    Install Update
+                  </button>
+                </div>
+              </div>
+
               <!-- About -->
               <div class="setting-card">
                 <div class="setting-header">
@@ -231,7 +252,7 @@
                   <h3>About</h3>
                 </div>
                 <div class="setting-content">
-                  <p class="version">ClipCrab v1.0.0</p>
+                  <p class="version" id="app-version">ClipCrab v0.2.1</p>
                   <p class="copyright">A modern clipboard manager</p>
                 </div>
               </div>
