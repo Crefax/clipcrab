@@ -1,5 +1,5 @@
-use rusqlite::Connection;
 use crate::security;
+use rusqlite::Connection;
 
 pub fn migrate_database(conn: &Connection) {
     // Mevcut sütunları kontrol et
@@ -38,7 +38,7 @@ pub fn migrate_database(conn: &Connection) {
         )
         .expect("Failed to add pinned column");
     }
-    
+
     // category kolonu ekle
     if !has_category {
         conn.execute(
@@ -47,7 +47,7 @@ pub fn migrate_database(conn: &Connection) {
         )
         .expect("Failed to add category column");
     }
-    
+
     // Mevcut kayıtların kategorilerini güncelle (NULL veya boş olanlar için)
     update_existing_categories(conn);
 }
@@ -59,10 +59,10 @@ pub fn update_existing_categories(conn: &Connection) {
         "UPDATE clipboard_history SET category = 'image' WHERE content_type = 'image'",
         [],
     );
-    
+
     // Tüm text kayıtları için kategori hesapla (NULL, boş veya 'text' olanlar)
     let sql = "SELECT id, content, content_type, is_encrypted FROM clipboard_history WHERE content_type != 'image'";
-    
+
     if let Ok(mut stmt) = conn.prepare(sql) {
         let rows: Vec<(i64, String, String, bool)> = match stmt.query_map([], |row| {
             Ok((
@@ -75,27 +75,32 @@ pub fn update_existing_categories(conn: &Connection) {
             Ok(mapped) => mapped.filter_map(Result::ok).collect(),
             Err(_) => return,
         };
-        
+
         for (id, content, content_type, is_encrypted) in rows {
             if content_type == "image" {
-                conn.execute("UPDATE clipboard_history SET category = 'image' WHERE id = ?1", [id]).ok();
+                conn.execute(
+                    "UPDATE clipboard_history SET category = 'image' WHERE id = ?1",
+                    [id],
+                )
+                .ok();
                 continue;
             }
-            
+
             // Şifreyi çöz
             let decrypted = if is_encrypted {
                 security::decrypt(&content).unwrap_or(content)
             } else {
                 content
             };
-            
+
             // Kategoriyi hesapla
             let category = detect_category(&decrypted);
-            
+
             conn.execute(
                 "UPDATE clipboard_history SET category = ?1 WHERE id = ?2",
                 rusqlite::params![category, id],
-            ).ok();
+            )
+            .ok();
         }
     }
 }
@@ -103,42 +108,42 @@ pub fn update_existing_categories(conn: &Connection) {
 /// Kategori tespit fonksiyonu
 fn detect_category(content: &str) -> &'static str {
     let content_lower = content.to_lowercase();
-    
+
     // URL kontrolü
-    if content_lower.starts_with("http://") || 
-       content_lower.starts_with("https://") || 
-       content_lower.starts_with("www.") {
+    if content_lower.starts_with("http://")
+        || content_lower.starts_with("https://")
+        || content_lower.starts_with("www.")
+    {
         return "url";
     }
-    
+
     // Email kontrolü
-    if content.contains('@') && 
-       content.split('@').count() == 2 &&
-       !content.contains(' ') {
-        if let Some(domain) = content.split('@').last() {
+    if content.contains('@') && content.split('@').count() == 2 && !content.contains(' ') {
+        if let Some(domain) = content.split('@').next_back() {
             if domain.contains('.') {
                 return "email";
             }
         }
     }
-    
+
     // Code kontrolü
-    if content.contains("function") ||
-       content.contains("const ") ||
-       content.contains("let ") ||
-       content.contains("var ") ||
-       content.contains("def ") ||
-       content.contains("class ") ||
-       content.contains("import ") ||
-       content.contains("fn ") ||
-       content.contains("pub ") ||
-       content.contains("->") ||
-       content.contains("=>") ||
-       (content.contains('{') && content.contains('}')) ||
-       content.contains("#include") ||
-       content.contains("<script") {
+    if content.contains("function")
+        || content.contains("const ")
+        || content.contains("let ")
+        || content.contains("var ")
+        || content.contains("def ")
+        || content.contains("class ")
+        || content.contains("import ")
+        || content.contains("fn ")
+        || content.contains("pub ")
+        || content.contains("->")
+        || content.contains("=>")
+        || (content.contains('{') && content.contains('}'))
+        || content.contains("#include")
+        || content.contains("<script")
+    {
         return "code";
     }
-    
+
     "text"
 }

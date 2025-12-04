@@ -18,14 +18,15 @@ pub fn get_db_path() -> PathBuf {
 pub fn init_db() -> Connection {
     let db_path = get_db_path();
     let conn = Connection::open(&db_path).expect("Failed to open database");
-    
+
     // SQLite performans optimizasyonları
     conn.execute_batch(
         "PRAGMA journal_mode = WAL;
          PRAGMA synchronous = NORMAL;
          PRAGMA cache_size = 10000;
-         PRAGMA temp_store = MEMORY;"
-    ).ok();
+         PRAGMA temp_store = MEMORY;",
+    )
+    .ok();
 
     // Tablo oluşturma sadece bir kere çalışsın
     INIT.call_once(|| {
@@ -49,15 +50,17 @@ pub fn init_db() -> Connection {
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_clipboard_pinned_id ON clipboard_history(pinned DESC, id DESC)",
             [],
-        ).ok();
-        
+        )
+        .ok();
+
         // Kategori için index (filtreleme hızı için)
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_clipboard_category ON clipboard_history(category)",
             [],
-        ).ok();
+        )
+        .ok();
     });
-    
+
     // Migration her başlatmada bir kez çalışsın
     MIGRATION.call_once(|| {
         super::migrate::migrate_database(&conn);
@@ -70,12 +73,13 @@ pub fn init_db() -> Connection {
 pub fn init_db_for_watcher() -> Connection {
     let db_path = get_db_path();
     let conn = Connection::open(&db_path).expect("Failed to open database");
-    
+
     // WAL mode performans için
     conn.execute_batch(
         "PRAGMA journal_mode = WAL;
-         PRAGMA synchronous = NORMAL;"
-    ).ok();
-    
+         PRAGMA synchronous = NORMAL;",
+    )
+    .ok();
+
     conn
 }

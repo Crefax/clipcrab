@@ -10,40 +10,47 @@ use tauri::Emitter;
 /// İçeriğin kategorisini belirle (kayıt anında)
 fn detect_category(content: &str) -> &'static str {
     let content_lower = content.to_lowercase();
-    
+
     // URL kontrolü
-    if content_lower.starts_with("http://") || 
-       content_lower.starts_with("https://") || 
-       content_lower.starts_with("www.") {
+    if content_lower.starts_with("http://")
+        || content_lower.starts_with("https://")
+        || content_lower.starts_with("www.")
+    {
         return "url";
     }
-    
+
     // Email kontrolü
-    if content.contains('@') && 
-       content.split('@').count() == 2 &&
-       content.split('@').last().map(|d| d.contains('.')).unwrap_or(false) &&
-       !content.contains(' ') {
+    if content.contains('@')
+        && content.split('@').count() == 2
+        && content
+            .split('@')
+            .next_back()
+            .map(|d| d.contains('.'))
+            .unwrap_or(false)
+        && !content.contains(' ')
+    {
         return "email";
     }
-    
+
     // Code kontrolü
-    if content.contains("function") ||
-       content.contains("const ") ||
-       content.contains("let ") ||
-       content.contains("var ") ||
-       content.contains("def ") ||
-       content.contains("class ") ||
-       content.contains("import ") ||
-       content.contains("fn ") ||
-       content.contains("pub ") ||
-       content.contains("->") ||
-       content.contains("=>") ||
-       (content.contains('{') && content.contains('}')) ||
-       content.contains("#include") ||
-       content.contains("<script") {
+    if content.contains("function")
+        || content.contains("const ")
+        || content.contains("let ")
+        || content.contains("var ")
+        || content.contains("def ")
+        || content.contains("class ")
+        || content.contains("import ")
+        || content.contains("fn ")
+        || content.contains("pub ")
+        || content.contains("->")
+        || content.contains("=>")
+        || (content.contains('{') && content.contains('}'))
+        || content.contains("#include")
+        || content.contains("<script")
+    {
         return "code";
     }
-    
+
     "text"
 }
 
@@ -63,7 +70,7 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
 
                     // Kategoriyi belirle (kayıt anında)
                     let category = detect_category(&current);
-                    
+
                     // İçeriği şifrele
                     let encrypted_content = match security::encrypt(&current) {
                         Ok(encrypted) => encrypted,
