@@ -54,50 +54,6 @@ fn detect_category(content: &str) -> &'static str {
     "text"
 }
 
-/// BGRA formatını tespit et
-/// Bazı uygulamalar (Minecraft modları gibi) BGRA formatında resim kopyalar
-/// Bu fonksiyon resmin BGRA olup olmadığını tahmin eder
-fn detect_bgra_format(bytes: &[u8]) -> bool {
-    if bytes.len() < 400 {
-        return false;
-    }
-    
-    // Rastgele birkaç piksel örnekle ve analiz et
-    let sample_count = 100.min(bytes.len() / 4);
-    let step = bytes.len() / 4 / sample_count;
-    
-    let mut blue_dominant = 0;
-    let mut red_dominant = 0;
-    
-    for i in 0..sample_count {
-        let idx = i * step * 4;
-        if idx + 3 >= bytes.len() {
-            break;
-        }
-        
-        let r = bytes[idx] as i32;
-        let g = bytes[idx + 1] as i32;
-        let b = bytes[idx + 2] as i32;
-        
-        // Eğer "kırmızı" kanalı (aslında mavi) maviden çok daha baskınsa
-        // ve renk nötr değilse (gri tonları hariç)
-        let rg_diff = (r - g).abs();
-        let rb_diff = (r - b).abs();
-        
-        if rb_diff > 30 && rg_diff > 10 {
-            if r > b {
-                blue_dominant += 1; // Aslında bu BGRA'da mavi demek
-            } else {
-                red_dominant += 1;
-            }
-        }
-    }
-    
-    // Eğer "mavi baskın" piksel sayısı çok fazlaysa, muhtemelen BGRA
-    // Bu buluşsal bir yöntem, %100 doğru değil ama çoğu durumda çalışır
-    blue_dominant > red_dominant * 2 && blue_dominant > sample_count / 4
-}
-
 pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
     thread::spawn(move || {
         // Watcher için optimize edilmiş bağlantı kullan
@@ -161,66 +117,36 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                 };
 
                 if image_changed {
-                    println!("========== NEW IMAGE DETECTED ==========");
-                    println!("Image dimensions: {}x{}", image.width, image.height);
-                    println!("Total bytes: {}", image.bytes.len());
-                    println!("Expected bytes (RGBA): {}", image.width * image.height * 4);
-                    
-                    // İlk birkaç pikselin değerlerini göster
-                    if image.bytes.len() >= 16 {
-                        println!("First 4 pixels (RGBA format assumed):");
-                        for i in 0..4 {
-                            let idx = i * 4;
-                            println!("  Pixel {}: R={}, G={}, B={}, A={}", 
-                                i,
-                                image.bytes[idx],
-                                image.bytes[idx + 1],
-                                image.bytes[idx + 2],
-                                image.bytes[idx + 3]
-                            );
+                    println!("New image: {}x{}", image.width, image.height);
+
+                    let mut bytes = image.bytes.to_vec();
+
+                    // Alpha kanalı analizi
+                    let mut all_alpha_zero = true; // Tüm alpha değerleri 0 mı?
+                    let mut all_alpha_same = true; // Tüm alpha değerleri aynı mı?
+                    let first_alpha = bytes.get(3).copied().unwrap_or(255);
+
+                    for chunk in bytes.chunks(4) {
+                        if chunk.len() == 4 {
+                            if chunk[3] != 0 {
+                                all_alpha_zero = false;
+                            }
+                            if chunk[3] != first_alpha {
+                                all_alpha_same = false;
+                            }
                         }
                     }
-                    
-                    // Alpha kanalı analizi - kaç piksel tamamen şeffaf?
-                    let transparent_count = image.bytes.chunks(4)
-                        .filter(|chunk| chunk.len() == 4 && chunk[3] == 0)
-                        .count();
-                    let total_pixels = image.width * image.height;
-                    let transparent_percent = (transparent_count as f64 / total_pixels as f64) * 100.0;
-                    println!("Transparent pixels: {} / {} ({:.1}%)", transparent_count, total_pixels, transparent_percent);
-                    
-                    // Ortalama alpha değeri
-                    let avg_alpha: f64 = image.bytes.chunks(4)
-                        .filter(|chunk| chunk.len() == 4)
-                        .map(|chunk| chunk[3] as f64)
-                        .sum::<f64>() / total_pixels as f64;
-                    println!("Average alpha value: {:.1}", avg_alpha);
-                    println!("=========================================");
 
-                    // Resmi PNG formatına dönüştür ve base64'e encode et
-                    // arboard RGBA formatında veri döner, ancak bazı uygulamalar BGRA kullanır
-                    let mut bytes = image.bytes.to_vec();
-                    
-                    // Eğer çoğu piksel şeffafsa, alpha kanalını düzelt
-                    if transparent_percent > 90.0 {
-                        println!("WARNING: Most pixels are transparent! Fixing alpha channel...");
-                        // Alpha kanalını 255 yap
+                    // Sadece TÜM pikseller alpha=0 ve hepsi aynıysa düzelt
+                    // Bu, Minecraft gibi uygulamaların hatalı alpha kanalını düzeltir
+                    // Ama gerçek şeffaflık içeren resimlere dokunmaz
+                    if all_alpha_zero && all_alpha_same {
+                        println!("Fixing broken alpha channel (all pixels have alpha=0)");
                         for chunk in bytes.chunks_exact_mut(4) {
                             chunk[3] = 255;
                         }
                     }
-                    
-                    // BGRA -> RGBA dönüşümü gerekip gerekmediğini kontrol et
-                    // Eğer resim çoğunlukla mavi tonlarındaysa, muhtemelen BGRA formatında
-                    let needs_swap = detect_bgra_format(&bytes);
-                    println!("BGRA swap needed: {}", needs_swap);
-                    if needs_swap {
-                        // BGRA -> RGBA: Her 4 byte'lık grupta R ve B'yi değiştir
-                        for chunk in bytes.chunks_exact_mut(4) {
-                            chunk.swap(0, 2); // B ve R'yi değiştir
-                        }
-                    }
-                    
+
                     let img_buffer = ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_raw(
                         image.width as u32,
                         image.height as u32,
