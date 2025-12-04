@@ -172,15 +172,14 @@
                   <h3>Language</h3>
                 </div>
                 <div class="setting-content">
-                  <div class="language-selector" id="language-selector">
-                    <button class="language-btn" data-lang="en">
-                      <span class="flag">🇺🇸</span>
-                      English
+                  <div class="language-dropdown" id="language-dropdown">
+                    <button class="language-dropdown-btn" id="language-dropdown-btn">
+                      <span class="current-language-label">English</span>
+                      <i class="fas fa-chevron-down dropdown-arrow"></i>
                     </button>
-                    <button class="language-btn" data-lang="tr">
-                      <span class="flag">🇹🇷</span>
-                      Türkçe
-                    </button>
+                    <div class="language-dropdown-menu" id="language-dropdown-menu">
+                      <!-- Diller dinamik olarak yüklenecek -->
+                    </div>
                   </div>
                 </div>
               </div>

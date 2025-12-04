@@ -1,25 +1,87 @@
 const SUPPORTED_LANGUAGES = {
-  'en': 'English',
-  'tr': 'Türkçe'
+  'en': { name: 'English', flag: '🇺🇸' },
+  'tr': { name: 'Türkçe', flag: '🇹🇷' }
 };
 const DEFAULT_LANGUAGE = 'en';
 let currentLanguage = localStorage.getItem('language') || DEFAULT_LANGUAGE;
 let translations = {};
 
 function updateCurrentLanguageUI() {
-  const currentLanguageSpan = document.querySelector('.current-language-label');
-  if (currentLanguageSpan) {
-    currentLanguageSpan.textContent = SUPPORTED_LANGUAGES[getCurrentLanguage()] || 'Language';
+  const currentLang = getCurrentLanguage();
+  const langData = SUPPORTED_LANGUAGES[currentLang];
+  
+  // Dropdown butonundaki metni güncelle
+  const currentLanguageLabel = document.querySelector('.current-language-label');
+  if (currentLanguageLabel && langData) {
+    currentLanguageLabel.innerHTML = `<span class="flag">${langData.flag}</span> ${langData.name}`;
   }
+  
   // Aktif seçeneği vurgula
   const options = document.querySelectorAll('.language-option');
   options.forEach(option => {
     option.classList.remove('active');
-    if (option.dataset.lang === getCurrentLanguage()) {
+    if (option.dataset.lang === currentLang) {
       option.classList.add('active');
     }
   });
 }
+
+// Dropdown menüsünü doldur
+function populateLanguageDropdown() {
+  const menu = document.getElementById('language-dropdown-menu');
+  if (!menu) return;
+  
+  menu.innerHTML = '';
+  const currentLang = getCurrentLanguage();
+  
+  Object.entries(SUPPORTED_LANGUAGES).forEach(([code, data]) => {
+    const option = document.createElement('button');
+    option.className = `language-option${code === currentLang ? ' active' : ''}`;
+    option.dataset.lang = code;
+    option.innerHTML = `<span class="flag">${data.flag}</span> ${data.name}`;
+    option.addEventListener('click', () => {
+      setLanguage(code);
+      closeLanguageDropdown();
+    });
+    menu.appendChild(option);
+  });
+}
+
+// Dropdown aç/kapa
+function toggleLanguageDropdown() {
+  const dropdown = document.getElementById('language-dropdown');
+  if (dropdown) {
+    dropdown.classList.toggle('open');
+  }
+}
+
+function closeLanguageDropdown() {
+  const dropdown = document.getElementById('language-dropdown');
+  if (dropdown) {
+    dropdown.classList.remove('open');
+  }
+}
+
+// Dropdown dışına tıklanınca kapat
+document.addEventListener('click', (e) => {
+  const dropdown = document.getElementById('language-dropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    closeLanguageDropdown();
+  }
+});
+
+// Dropdown butonuna tıklama
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('language-dropdown-btn');
+  if (btn) {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleLanguageDropdown();
+    });
+  }
+  populateLanguageDropdown();
+  updateCurrentLanguageUI();
+});
 
 async function loadLanguage(lang) {
   if (!SUPPORTED_LANGUAGES[lang]) lang = DEFAULT_LANGUAGE;

@@ -29,7 +29,6 @@ export const elements = {
   settingsPage: document.getElementById("settings-page"),
   // Settings
   autostartCheckbox: document.getElementById("autostart-enabled"),
-  languageSelector: document.getElementById("language-selector"),
   themeSelector: document.getElementById("theme-selector")
 };
 
@@ -80,24 +79,6 @@ export function switchPage(pageName) {
 
 // Settings
 export function initSettings() {
-  // Language buttons
-  if (elements.languageSelector) {
-    const langButtons = elements.languageSelector.querySelectorAll('.language-btn');
-    langButtons.forEach(btn => {
-      btn.addEventListener('click', async function() {
-        const lang = this.dataset.lang;
-        langButtons.forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        
-        if (window.i18n && window.i18n.setLanguage) {
-          await window.i18n.setLanguage(lang);
-          localStorage.setItem('language', lang);
-          await updatePageTexts();
-        }
-      });
-    });
-  }
-  
   // Theme buttons
   if (elements.themeSelector) {
     const themeButtons = elements.themeSelector.querySelectorAll('.theme-btn');
@@ -140,14 +121,6 @@ export function initSettings() {
 }
 
 export async function loadSettings() {
-  // Load current language
-  const currentLang = localStorage.getItem('language') || 'en';
-  if (elements.languageSelector) {
-    elements.languageSelector.querySelectorAll('.language-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.lang === currentLang);
-    });
-  }
-  
   // Load current theme
   const currentTheme = localStorage.getItem('theme') || 'auto';
   if (elements.themeSelector) {
