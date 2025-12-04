@@ -46,7 +46,7 @@ jobs:
             ## 🦀 ClipCrab ${{ github.ref_name }}
             
             ### Installation
-            - **Windows:** Download the `.exe` installer below
+            - **Windows:** Download `.msi` or `.exe` installer below
             
             ### Auto-Update
             Existing users will be notified automatically!
