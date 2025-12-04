@@ -3,6 +3,19 @@ import { loadClipboardHistory } from './clipboard.js';
 import { setupEventListeners, setupServiceWorker } from './events.js';
 import { initUpdater } from './updater.js';
 
+// Load app version dynamically
+async function loadAppVersion() {
+  try {
+    const version = await window.__TAURI__.app.getVersion();
+    const versionEl = document.getElementById('app-version');
+    if (versionEl) {
+      versionEl.textContent = `ClipCrab v${version}`;
+    }
+  } catch (e) {
+    console.error('Failed to load app version:', e);
+  }
+}
+
 // Main initialization
 window.addEventListener("DOMContentLoaded", async () => {
   // Apply theme immediately
@@ -17,6 +30,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Initialize updater
   initUpdater();
+  
+  // Load app version
+  loadAppVersion();
   
   // Paralel async işlemler
   const clipboardPromise = loadClipboardHistory();
