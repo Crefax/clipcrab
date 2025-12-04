@@ -3,6 +3,14 @@ import { showToast } from './utils.js';
 
 let updateAvailable = null;
 
+// i18n helper
+async function t(key) {
+  if (window.i18n && window.i18n.t) {
+    return await window.i18n.t(key);
+  }
+  return key;
+}
+
 // Tauri updater API (global)
 const getUpdaterAPI = () => {
   if (window.__TAURI__?.updater) {
@@ -54,14 +62,17 @@ export async function checkForUpdates(silent = false) {
   
   try {
     checkBtn.disabled = true;
-    checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
-    updateMessage.textContent = 'Checking for updates...';
+    const checkingText = await t('settings.updates.checking');
+    const checkButtonText = await t('settings.updates.check_button');
+    checkBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${checkingText}`;
+    updateMessage.textContent = checkingText;
     
     const update = await updater.check();
     
     if (update) {
       updateAvailable = update;
-      updateMessage.innerHTML = `<strong>New version available:</strong> v${update.version}`;
+      const availableText = await t('settings.updates.available');
+      updateMessage.innerHTML = `<strong>${availableText.replace('{version}', update.version)}</strong>`;
       checkBtn.style.display = 'none';
       installBtn.style.display = 'inline-flex';
       
@@ -69,33 +80,38 @@ export async function checkForUpdates(silent = false) {
         showToast(`Update available: v${update.version}`, 'info');
       }
     } else {
-      updateMessage.textContent = 'You are using the latest version!';
-      checkBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Check for Updates';
+      const upToDateText = await t('settings.updates.up_to_date');
+      updateMessage.textContent = upToDateText;
+      checkBtn.innerHTML = `<i class="fas fa-sync-alt"></i> <span>${checkButtonText}</span>`;
       checkBtn.disabled = false;
       
       if (!silent) {
-        showToast('You are up to date!', 'success');
+        showToast(upToDateText, 'success');
       }
     }
   } catch (error) {
     console.error('Update check failed:', error);
     
+    const errorText = await t('settings.updates.error');
+    const checkButtonText = await t('settings.updates.check_button');
+    
     // Daha kullanıcı dostu hata mesajları
-    let errorMessage = 'Could not check for updates';
+    let errorMessage = errorText;
     if (error.toString().includes('Could not fetch') || error.toString().includes('fetch')) {
-      errorMessage = 'No updates available yet';
+      const upToDateText = await t('settings.updates.up_to_date');
+      errorMessage = upToDateText;
     } else if (error.toString().includes('network') || error.toString().includes('Network')) {
-      errorMessage = 'Network error. Check your connection.';
+      errorMessage = 'Network error';
     }
     
     updateMessage.textContent = errorMessage;
-    checkBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Check for Updates';
+    checkBtn.innerHTML = `<i class="fas fa-sync-alt"></i> <span>${checkButtonText}</span>`;
     checkBtn.disabled = false;
     
     if (!silent) {
       // Sadece gerçek hatalarda toast göster, "no release" durumunda gösterme
       if (!error.toString().includes('Could not fetch')) {
-        showToast('Update check failed', 'error');
+        showToast(errorText, 'error');
       }
     }
   }
@@ -109,8 +125,11 @@ export async function installUpdate() {
   
   try {
     installBtn.disabled = true;
-    installBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
-    updateMessage.textContent = 'Downloading update...';
+    const downloadingText = await t('settings.updates.downloading');
+    const installingText = await t('settings.updates.installing');
+    
+    installBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${downloadingText}`;
+    updateMessage.textContent = downloadingText;
     
     // Download and install
     let downloaded = 0;
@@ -120,19 +139,19 @@ export async function installUpdate() {
       switch (event.event) {
         case 'Started':
           contentLength = event.data.contentLength || 0;
-          updateMessage.textContent = 'Starting download...';
+          updateMessage.textContent = downloadingText;
           break;
         case 'Progress':
           downloaded += event.data.chunkLength;
           if (contentLength > 0) {
             const percent = Math.round((downloaded / contentLength) * 100);
-            updateMessage.textContent = `Downloading... ${percent}%`;
+            updateMessage.textContent = `${downloadingText} ${percent}%`;
             installBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${percent}%`;
           }
           break;
         case 'Finished':
-          updateMessage.textContent = 'Installing update... App will restart.';
-          installBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Installing...';
+          updateMessage.textContent = installingText;
+          installBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${installingText}`;
           break;
       }
     });
@@ -141,9 +160,11 @@ export async function installUpdate() {
     
   } catch (error) {
     console.error('Update install failed:', error);
-    updateMessage.textContent = 'Update installation failed';
-    installBtn.innerHTML = '<i class="fas fa-download"></i> Retry Install';
+    const installFailedText = await t('settings.updates.install_failed');
+    const installButtonText = await t('settings.updates.install_button');
+    updateMessage.textContent = installFailedText;
+    installBtn.innerHTML = `<i class="fas fa-download"></i> ${installButtonText}`;
     installBtn.disabled = false;
-    showToast('Update installation failed', 'error');
+    showToast(installFailedText, 'error');
   }
 }

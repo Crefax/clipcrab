@@ -107,10 +107,13 @@
       "check_message": "Güncellemeleri kontrol etmek için tıklayın",
       "check_button": "Güncellemeleri Kontrol Et",
       "install_button": "Güncellemeyi Yükle",
-      "checking": "Güncellemeler kontrol ediliyor...",
+      "checking": "Kontrol ediliyor...",
       "available": "Güncelleme mevcut: v{version}",
       "up_to_date": "Güncelsiniz!",
-      "error": "Güncelleme kontrolü başarısız"
+      "error": "Güncelleme kontrolü başarısız",
+      "downloading": "İndiriliyor...",
+      "installing": "Yükleniyor...",
+      "install_failed": "Yükleme başarısız"
     },
     "about": {
       "title": "Hakkında",
@@ -146,10 +149,12 @@
   "importexport": {
     "title": "İçe/Dışa Aktar",
     "desc": "Clipboard geçmişinizi güvenli bir şekilde dışa aktarabilir veya yedekten içe aktarabilirsiniz. Bu özellik verilerinizi yedeklemenize ve farklı cihazlar arasında senkronize etmenize olanak tanır.",
-    "export": "JSON Olarak Dışa Aktar",
-    "export_desc": "Clipboard geçmişinizi JSON formatında dışa aktarın",
-    "import": "JSON'dan İçe Aktar",
-    "import_desc": "Önceden dışa aktarılmış verileri içe aktarın",
+    "export": "Veriyi Dışa Aktar",
+    "export_desc": "Pano geçmişinizi JSON dosyası olarak kaydedin",
+    "export_button": "JSON Dışa Aktar",
+    "import": "Veri İçe Aktar",
+    "import_desc": "Önceden dışa aktarılmış dosyadan geri yükleyin",
+    "import_button": "JSON İçe Aktar",
     "import_success": "İçe aktarma başarılı! {count} öğe eklendi.",
     "import_error": "İçe aktarma başarısız! Geçersiz veya bozuk dosya.",
     "export_success": "Dışa aktarma başarılı!",

@@ -81,10 +81,12 @@
   "importexport": {
     "title": "Import / Export",
     "desc": "You can safely export your clipboard history or import from a backup. This feature allows you to backup your data and synchronize between different devices.",
-    "export": "Export as JSON",
-    "export_desc": "Export your clipboard history in JSON format",
-    "import": "Import from JSON",
-    "import_desc": "Import previously exported data",
+    "export": "Export Data",
+    "export_desc": "Save your clipboard history as a JSON file",
+    "export_button": "Export JSON",
+    "import": "Import Data",
+    "import_desc": "Restore from a previously exported file",
+    "import_button": "Import JSON",
     "import_success": "Import successful! {count} items added.",
     "import_error": "Import failed! Invalid or corrupt file.",
     "export_success": "Export successful!",
@@ -127,10 +129,13 @@
       "check_message": "Click to check for updates",
       "check_button": "Check for Updates",
       "install_button": "Install Update",
-      "checking": "Checking for updates...",
+      "checking": "Checking...",
       "available": "Update available: v{version}",
       "up_to_date": "You're up to date!",
-      "error": "Failed to check for updates"
+      "error": "Failed to check for updates",
+      "downloading": "Downloading...",
+      "installing": "Installing...",
+      "install_failed": "Installation failed"
     },
     "about": {
       "title": "About",

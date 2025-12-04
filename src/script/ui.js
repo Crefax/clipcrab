@@ -173,6 +173,30 @@ applyTheme(savedTheme);
 export async function updatePageTexts() {
   await waitForI18n();
   
+  // data-i18n attribute'larını otomatik çevir
+  const i18nElements = document.querySelectorAll('[data-i18n]');
+  for (const el of i18nElements) {
+    const key = el.getAttribute('data-i18n');
+    if (key) {
+      const translated = await window.i18n.t(key);
+      if (translated && translated !== key) {
+        el.textContent = translated;
+      }
+    }
+  }
+  
+  // data-i18n-placeholder için
+  const placeholderElements = document.querySelectorAll('[data-i18n-placeholder]');
+  for (const el of placeholderElements) {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (key) {
+      const translated = await window.i18n.t(key);
+      if (translated && translated !== key) {
+        el.placeholder = translated;
+      }
+    }
+  }
+  
   // Navigation
   const historyTab = document.querySelector('#history-tab span');
   const importexportTab = document.querySelector('#importexport-tab span');
