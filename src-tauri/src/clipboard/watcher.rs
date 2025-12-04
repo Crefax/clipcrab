@@ -54,6 +54,50 @@ fn detect_category(content: &str) -> &'static str {
     "text"
 }
 
+/// BGRA formatını tespit et
+/// Bazı uygulamalar (Minecraft modları gibi) BGRA formatında resim kopyalar
+/// Bu fonksiyon resmin BGRA olup olmadığını tahmin eder
+fn detect_bgra_format(bytes: &[u8]) -> bool {
+    if bytes.len() < 400 {
+        return false;
+    }
+    
+    // Rastgele birkaç piksel örnekle ve analiz et
+    let sample_count = 100.min(bytes.len() / 4);
+    let step = bytes.len() / 4 / sample_count;
+    
+    let mut blue_dominant = 0;
+    let mut red_dominant = 0;
+    
+    for i in 0..sample_count {
+        let idx = i * step * 4;
+        if idx + 3 >= bytes.len() {
+            break;
+        }
+        
+        let r = bytes[idx] as i32;
+        let g = bytes[idx + 1] as i32;
+        let b = bytes[idx + 2] as i32;
+        
+        // Eğer "kırmızı" kanalı (aslında mavi) maviden çok daha baskınsa
+        // ve renk nötr değilse (gri tonları hariç)
+        let rg_diff = (r - g).abs();
+        let rb_diff = (r - b).abs();
+        
+        if rb_diff > 30 && rg_diff > 10 {
+            if r > b {
+                blue_dominant += 1; // Aslında bu BGRA'da mavi demek
+            } else {
+                red_dominant += 1;
+            }
+        }
+    }
+    
+    // Eğer "mavi baskın" piksel sayısı çok fazlaysa, muhtemelen BGRA
+    // Bu buluşsal bir yöntem, %100 doğru değil ama çoğu durumda çalışır
+    blue_dominant > red_dominant * 2 && blue_dominant > sample_count / 4
+}
+
 pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
     thread::spawn(move || {
         // Watcher için optimize edilmiş bağlantı kullan
@@ -120,10 +164,23 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                     println!("New image content: {}x{}", image.width, image.height);
 
                     // Resmi PNG formatına dönüştür ve base64'e encode et
+                    // arboard RGBA formatında veri döner, ancak bazı uygulamalar BGRA kullanır
+                    let mut bytes = image.bytes.to_vec();
+                    
+                    // BGRA -> RGBA dönüşümü gerekip gerekmediğini kontrol et
+                    // Eğer resim çoğunlukla mavi tonlarındaysa, muhtemelen BGRA formatında
+                    let needs_swap = detect_bgra_format(&bytes);
+                    if needs_swap {
+                        // BGRA -> RGBA: Her 4 byte'lık grupta R ve B'yi değiştir
+                        for chunk in bytes.chunks_exact_mut(4) {
+                            chunk.swap(0, 2); // B ve R'yi değiştir
+                        }
+                    }
+                    
                     let img_buffer = ImageBuffer::<image::Rgba<u8>, Vec<u8>>::from_raw(
                         image.width as u32,
                         image.height as u32,
-                        image.bytes.to_vec(),
+                        bytes,
                     )
                     .expect("Failed to create image buffer");
 
