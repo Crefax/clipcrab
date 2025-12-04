@@ -382,6 +382,41 @@
   animation: scaleIn var(--transition-fast);
 }
 
+/* Image Preview Modal - Larger for images */
+.modal.image-modal {
+  max-width: 95vw;
+  max-height: 95vh;
+  width: auto;
+}
+
+.modal.image-modal .modal-body {
+  padding: var(--space-4);
+  max-height: calc(95vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+}
+
+.modal.image-modal .content-preview {
+  max-height: none;
+  padding: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.image-modal .content-preview img {
+  max-width: 100%;
+  max-height: calc(95vh - 140px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
 .modal-header {
   display: flex;
   align-items: center;

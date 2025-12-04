@@ -161,15 +161,59 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
                 };
 
                 if image_changed {
-                    println!("New image content: {}x{}", image.width, image.height);
+                    println!("========== NEW IMAGE DETECTED ==========");
+                    println!("Image dimensions: {}x{}", image.width, image.height);
+                    println!("Total bytes: {}", image.bytes.len());
+                    println!("Expected bytes (RGBA): {}", image.width * image.height * 4);
+                    
+                    // İlk birkaç pikselin değerlerini göster
+                    if image.bytes.len() >= 16 {
+                        println!("First 4 pixels (RGBA format assumed):");
+                        for i in 0..4 {
+                            let idx = i * 4;
+                            println!("  Pixel {}: R={}, G={}, B={}, A={}", 
+                                i,
+                                image.bytes[idx],
+                                image.bytes[idx + 1],
+                                image.bytes[idx + 2],
+                                image.bytes[idx + 3]
+                            );
+                        }
+                    }
+                    
+                    // Alpha kanalı analizi - kaç piksel tamamen şeffaf?
+                    let transparent_count = image.bytes.chunks(4)
+                        .filter(|chunk| chunk.len() == 4 && chunk[3] == 0)
+                        .count();
+                    let total_pixels = image.width * image.height;
+                    let transparent_percent = (transparent_count as f64 / total_pixels as f64) * 100.0;
+                    println!("Transparent pixels: {} / {} ({:.1}%)", transparent_count, total_pixels, transparent_percent);
+                    
+                    // Ortalama alpha değeri
+                    let avg_alpha: f64 = image.bytes.chunks(4)
+                        .filter(|chunk| chunk.len() == 4)
+                        .map(|chunk| chunk[3] as f64)
+                        .sum::<f64>() / total_pixels as f64;
+                    println!("Average alpha value: {:.1}", avg_alpha);
+                    println!("=========================================");
 
                     // Resmi PNG formatına dönüştür ve base64'e encode et
                     // arboard RGBA formatında veri döner, ancak bazı uygulamalar BGRA kullanır
                     let mut bytes = image.bytes.to_vec();
                     
+                    // Eğer çoğu piksel şeffafsa, alpha kanalını düzelt
+                    if transparent_percent > 90.0 {
+                        println!("WARNING: Most pixels are transparent! Fixing alpha channel...");
+                        // Alpha kanalını 255 yap
+                        for chunk in bytes.chunks_exact_mut(4) {
+                            chunk[3] = 255;
+                        }
+                    }
+                    
                     // BGRA -> RGBA dönüşümü gerekip gerekmediğini kontrol et
                     // Eğer resim çoğunlukla mavi tonlarındaysa, muhtemelen BGRA formatında
                     let needs_swap = detect_bgra_format(&bytes);
+                    println!("BGRA swap needed: {}", needs_swap);
                     if needs_swap {
                         // BGRA -> RGBA: Her 4 byte'lık grupta R ve B'yi değiştir
                         for chunk in bytes.chunks_exact_mut(4) {

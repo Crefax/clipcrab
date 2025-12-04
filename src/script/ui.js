@@ -334,24 +334,30 @@ export async function showMessageModal(item) {
   const typeLabel = await getTextTypeLabel(item.content, item.content_type);
   const textIcon = getTextIcon(item.content, item.content_type);
   
+  // Resim için farklı modal class'ı kullan
+  const isImage = item.content_type === 'image' && item.image_data;
+  const modalClass = isImage ? 'modal message-modal image-modal' : 'modal message-modal';
+  
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   modal.innerHTML = `
-    <div class="modal message-modal">
+    <div class="${modalClass}">
       <div class="modal-header">
         <h3><i class="${textIcon}" style="color: var(--accent)"></i> ${typeLabel}</h3>
         <button class="btn-icon" id="close-modal"><i class="fas fa-xmark"></i></button>
       </div>
       <div class="modal-body">
-        <div class="message-content">
-          ${item.content_type === 'image' && item.image_data
+        <div class="${isImage ? 'content-preview' : 'message-content'}">
+          ${isImage
             ? `<img src="data:image/png;base64,${item.image_data}" alt="Image" />`
             : `<pre>${escapeHtml(item.content)}</pre>`}
         </div>
+        ${!isImage ? `
         <div class="message-meta">
           <span class="meta-item"><i class="fas fa-clock"></i>${timeAgo}</span>
           <span class="meta-item"><i class="fas fa-text-width"></i>${item.content.length} chars</span>
         </div>
+        ` : ''}
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" id="modal-pin">
