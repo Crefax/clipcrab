@@ -160,7 +160,7 @@
         <!-- Settings Page -->
         <div id="settings-page" class="page">
           <header class="page-header">
-            <h1><i class="fas fa-gear"></i> Settings</h1>
+            <h1><i class="fas fa-gear"></i> <span data-i18n="navigation.settings">Settings</span></h1>
           </header>
           
           <div class="content-area">
@@ -169,7 +169,7 @@
               <div class="setting-card">
                 <div class="setting-header">
                   <i class="fas fa-globe"></i>
-                  <h3>Language</h3>
+                  <h3 data-i18n="settings.language.label">Language</h3>
                 </div>
                 <div class="setting-content">
                   <div class="language-dropdown" id="language-dropdown">
@@ -188,11 +188,11 @@
               <div class="setting-card">
                 <div class="setting-header">
                   <i class="fas fa-rocket"></i>
-                  <h3>Startup</h3>
+                  <h3 data-i18n="settings.startup.title">Startup</h3>
                 </div>
                 <div class="setting-content">
                   <label class="toggle-setting">
-                    <span>Start with Windows</span>
+                    <span data-i18n="settings.startup.start_with_windows">Start with Windows</span>
                     <input type="checkbox" id="autostart-enabled" />
                     <span class="toggle"></span>
                   </label>
@@ -203,21 +203,21 @@
               <div class="setting-card">
                 <div class="setting-header">
                   <i class="fas fa-palette"></i>
-                  <h3>Appearance</h3>
+                  <h3 data-i18n="settings.appearance.title">Appearance</h3>
                 </div>
                 <div class="setting-content">
                   <div class="theme-selector" id="theme-selector">
                     <button class="theme-btn" data-theme="light">
                       <i class="fas fa-sun"></i>
-                      Light
+                      <span data-i18n="settings.theme_options.light">Light</span>
                     </button>
                     <button class="theme-btn" data-theme="dark">
                       <i class="fas fa-moon"></i>
-                      Dark
+                      <span data-i18n="settings.theme_options.dark">Dark</span>
                     </button>
                     <button class="theme-btn active" data-theme="auto">
                       <i class="fas fa-circle-half-stroke"></i>
-                      Auto
+                      <span data-i18n="settings.theme_options.auto">Auto</span>
                     </button>
                   </div>
                 </div>
@@ -227,19 +227,19 @@
               <div class="setting-card">
                 <div class="setting-header">
                   <i class="fas fa-cloud-arrow-down"></i>
-                  <h3>Updates</h3>
+                  <h3 data-i18n="settings.updates.title">Updates</h3>
                 </div>
                 <div class="setting-content">
                   <div id="update-status" class="update-status">
-                    <span id="update-message">Click to check for updates</span>
+                    <span id="update-message" data-i18n="settings.updates.check_message">Click to check for updates</span>
                   </div>
                   <button id="check-update" class="btn btn-primary">
                     <i class="fas fa-sync-alt"></i>
-                    Check for Updates
+                    <span data-i18n="settings.updates.check_button">Check for Updates</span>
                   </button>
                   <button id="install-update" class="btn btn-success" style="display: none;">
                     <i class="fas fa-download"></i>
-                    Install Update
+                    <span data-i18n="settings.updates.install_button">Install Update</span>
                   </button>
                 </div>
               </div>
@@ -248,11 +248,11 @@
               <div class="setting-card">
                 <div class="setting-header">
                   <i class="fas fa-info-circle"></i>
-                  <h3>About</h3>
+                  <h3 data-i18n="settings.about.title">About</h3>
                 </div>
                 <div class="setting-content">
                   <p class="version" id="app-version">ClipCrab v...</p>
-                  <p class="copyright">A modern clipboard manager</p>
+                  <p class="copyright" data-i18n="settings.about.description">A modern clipboard manager</p>
                 </div>
               </div>
             </div>

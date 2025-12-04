@@ -78,6 +78,10 @@
       "title": "Dil Ayarları",
       "label": "Dil"
     },
+    "startup": {
+      "title": "Başlangıç",
+      "start_with_windows": "Windows ile başlat"
+    },
     "privacy": {
       "title": "Gizlilik ve Güvenlik",
       "auto_start": "Windows ile otomatik başlat",
@@ -98,6 +102,20 @@
       "theme": "Tema",
       "compact_mode": "Kompakt mod"
     },
+    "updates": {
+      "title": "Güncellemeler",
+      "check_message": "Güncellemeleri kontrol etmek için tıklayın",
+      "check_button": "Güncellemeleri Kontrol Et",
+      "install_button": "Güncellemeyi Yükle",
+      "checking": "Güncellemeler kontrol ediliyor...",
+      "available": "Güncelleme mevcut: v{version}",
+      "up_to_date": "Güncelsiniz!",
+      "error": "Güncelleme kontrolü başarısız"
+    },
+    "about": {
+      "title": "Hakkında",
+      "description": "Modern bir pano yöneticisi"
+    },
     "actions": {
       "save": "Ayarları Kaydet",
       "reset": "Varsayılana Sıfırla",
@@ -106,7 +124,7 @@
       "reset_success": "Ayarlar varsayılana sıfırlandı"
     },
     "theme_options": {
-      "auto": "Otomatik (Sistem)",
+      "auto": "Otomatik",
       "light": "Açık",
       "dark": "Koyu"
     },

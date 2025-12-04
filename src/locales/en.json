@@ -98,6 +98,10 @@
       "title": "Language Settings",
       "label": "Language"
     },
+    "startup": {
+      "title": "Startup",
+      "start_with_windows": "Start with Windows"
+    },
     "privacy": {
       "title": "Privacy & Security",
       "auto_start": "Start with Windows",
@@ -118,6 +122,20 @@
       "theme": "Theme",
       "compact_mode": "Compact mode"
     },
+    "updates": {
+      "title": "Updates",
+      "check_message": "Click to check for updates",
+      "check_button": "Check for Updates",
+      "install_button": "Install Update",
+      "checking": "Checking for updates...",
+      "available": "Update available: v{version}",
+      "up_to_date": "You're up to date!",
+      "error": "Failed to check for updates"
+    },
+    "about": {
+      "title": "About",
+      "description": "A modern clipboard manager"
+    },
     "actions": {
       "save": "Save Settings",
       "reset": "Reset to Default",
@@ -126,7 +144,7 @@
       "reset_success": "Settings have been reset to default"
     },
     "theme_options": {
-      "auto": "Auto (System)",
+      "auto": "Auto",
       "light": "Light",
       "dark": "Dark"
     },
