@@ -114,16 +114,6 @@ body {
   overflow: hidden;
 }
 
-/* App Loading State - prevents white flash on startup */
-body:not(.app-ready) .app {
-  opacity: 0;
-}
-
-body.app-ready .app {
-  opacity: 1;
-  transition: opacity 0.15s ease-in;
-}
-
 /* Typography */
 h1 {
   font-size: 1.5rem;

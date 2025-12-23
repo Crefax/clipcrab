@@ -46,9 +46,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Setup service worker
   setupServiceWorker();
-  
-  // Mark app as ready (removes loading state)
-  document.body.classList.add('app-ready');
 });
 
 // İlk çalıştırma kontrolü
