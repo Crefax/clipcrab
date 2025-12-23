@@ -58,16 +58,19 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
     thread::spawn(move || {
         // Watcher için optimize edilmiş bağlantı kullan
         let conn = database::init_db_for_watcher();
-        
+
         // Linux'ta clipboard erişimi başarısız olabilir (X11/Wayland)
         let mut clipboard = match Clipboard::new() {
             Ok(cb) => cb,
             Err(e) => {
-                eprintln!("Failed to initialize clipboard: {}. Clipboard watcher disabled.", e);
+                eprintln!(
+                    "Failed to initialize clipboard: {}. Clipboard watcher disabled.",
+                    e
+                );
                 return;
             }
         };
-        
+
         let mut last_clip_text = clipboard.get_text().unwrap_or_default();
         let mut last_clip_image = clipboard.get_image().ok();
 
