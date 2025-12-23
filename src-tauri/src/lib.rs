@@ -97,6 +97,12 @@ pub fn run() {
                 eprintln!("Tray icon setup failed: {}", e);
             }
 
+            // DevTools'u aç (debug için)
+            #[cfg(debug_assertions)]
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.open_devtools();
+            }
+
             // Veritabanı migration'ını çalıştır
             let _ = commands::force_update_categories();
 
