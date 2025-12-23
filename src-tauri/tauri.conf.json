@@ -13,7 +13,8 @@
         "title": "ClipCrab",
         "width": 800,
         "height": 600,
-        "label": "main"
+        "label": "main",
+        "visible": false
       }
     ],
     "security": {

@@ -46,6 +46,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Setup service worker
   setupServiceWorker();
+  
+  // Show window after everything is loaded (fixes white screen issue)
+  try {
+    const { getCurrentWindow } = window.__TAURI__.window;
+    const appWindow = getCurrentWindow();
+    await appWindow.show();
+    await appWindow.setFocus();
+  } catch (e) {
+    console.error('Failed to show window:', e);
+  }
 });
 
 // İlk çalıştırma kontrolü
