@@ -9,7 +9,7 @@ static MIGRATION: Once = Once::new();
 
 pub fn get_db_path() -> PathBuf {
     let mut path = dirs::data_dir().expect("User data directory not found");
-    path.push("ClipCrab");
+    path.push("clipcrab");
     std::fs::create_dir_all(&path).expect("Failed to create data directory");
     path.push("clipboard.db");
     path

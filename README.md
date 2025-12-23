@@ -37,6 +37,36 @@ Your data is stored locally in:
 
 Download the latest release from the [Releases](https://github.com/crefax/clipcrab/releases) page.
 
+### Windows
+- Download `.msi` or `.exe` installer
+
+### Linux
+- **Debian/Ubuntu**: Download `.deb` file
+- **Fedora/RHEL**: Download `.rpm` file
+- **Other distros**: Download `.AppImage` (universal, no install needed)
+
+#### Linux Dependencies
+For Linux, you may need to install these dependencies:
+```bash
+# Debian/Ubuntu
+sudo apt install libwebkit2gtk-4.1-0 libappindicator3-1
+
+# Fedora
+sudo dnf install webkit2gtk4.1 libappindicator-gtk3
+```
+
+### Building from Source
+```bash
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Clone and build
+git clone https://github.com/crefax/clipcrab.git
+cd clipcrab
+npm install
+npm run tauri build
+```
+
 ## Tech Stack
 
 - **Backend**: Rust + Tauri 2.0
