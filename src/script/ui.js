@@ -129,6 +129,29 @@ export async function loadSettings() {
     });
   }
   
+  // Update autostart label based on platform
+  const autostartLabel = document.getElementById('autostart-label');
+  if (autostartLabel) {
+    try {
+      const os = await window.__TAURI__.os.platform();
+      const isWindows = os === 'windows' || os === 'win32';
+      const isLinux = os === 'linux';
+      const isMac = os === 'darwin' || os === 'macos';
+      
+      if (isWindows) {
+        autostartLabel.textContent = await window.i18n.t('settings.startup.start_with_windows') || 'Start with Windows';
+      } else if (isLinux) {
+        autostartLabel.textContent = await window.i18n.t('settings.startup.start_with_linux') || 'Start with Linux';
+      } else if (isMac) {
+        autostartLabel.textContent = await window.i18n.t('settings.startup.start_with_macos') || 'Start with macOS';
+      } else {
+        autostartLabel.textContent = await window.i18n.t('settings.startup.start_with_system') || 'Start with system';
+      }
+    } catch (e) {
+      console.log('Platform detection failed:', e);
+    }
+  }
+  
   // Load autostart status
   if (elements.autostartCheckbox) {
     try {

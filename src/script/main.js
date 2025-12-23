@@ -64,7 +64,15 @@ async function checkFirstRun() {
 }
 
 // Hoş geldin modalı
-function showWelcomeModal() {
+async function showWelcomeModal() {
+  // Platform tespiti
+  const os = await window.__TAURI__.os.platform();
+  const isWindows = os === 'windows' || os === 'win32';
+  const isLinux = os === 'linux';
+  const isMac = os === 'darwin' || os === 'macos';
+  
+  const platformName = isWindows ? 'Windows' : isLinux ? 'Linux' : isMac ? 'macOS' : 'sistem';
+  
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   modal.innerHTML = `
@@ -75,14 +83,14 @@ function showWelcomeModal() {
       <div class="modal-body">
         <p>ClipCrab clipboard yöneticinize hoş geldiniz! Daha iyi bir deneyim için:</p>
         <ul>
-          <li><strong>✨ Otomatik Başlatma:</strong> Windows ile birlikte otomatik başlat</li>
+          <li><strong>✨ Otomatik Başlatma:</strong> ${platformName} ile birlikte otomatik başlat</li>
           <li><strong>🔒 Güvenli:</strong> Clipboard geçmişiniz güvenle saklanır</li>
           <li><strong>⚡ Hızlı:</strong> System tray'de arka planda çalışır</li>
         </ul>
         <div class="welcome-autostart">
           <label>
             <input type="checkbox" id="welcome-autostart" checked />
-            <span>Windows başlangıcında otomatik başlat (Önerilir)</span>
+            <span>${platformName} başlangıcında otomatik başlat (Önerilir)</span>
           </label>
         </div>
       </div>

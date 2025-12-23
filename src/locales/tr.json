@@ -80,7 +80,10 @@
     },
     "startup": {
       "title": "Başlangıç",
-      "start_with_windows": "Windows ile başlat"
+      "start_with_windows": "Windows ile başlat",
+      "start_with_linux": "Linux ile başlat",
+      "start_with_macos": "macOS ile başlat",
+      "start_with_system": "Sistem ile başlat"
     },
     "privacy": {
       "title": "Gizlilik ve Güvenlik",
