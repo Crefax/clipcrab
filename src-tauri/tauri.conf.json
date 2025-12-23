@@ -13,8 +13,7 @@
         "title": "ClipCrab",
         "width": 800,
         "height": 600,
-        "label": "main",
-        "visible": false
+        "label": "main"
       }
     ],
     "security": {
@@ -44,7 +43,7 @@
       "icons/icon.ico"
     ],
     "publisher": "ClipCrab",
-    "copyright": "Copyright © 2024 ClipCrab",
+    "copyright": "Copyright © 2025 ClipCrab",
     "category": "Utility",
     "shortDescription": "Clipboard Manager",
     "longDescription": "A secure clipboard manager with encryption and system tray support."
