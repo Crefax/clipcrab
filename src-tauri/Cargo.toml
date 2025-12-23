@@ -1,6 +1,6 @@
 [package]
 name = "clipcrab"
-version = "0.4.2"
+version = "0.5.0"
 description = "A secure clipboard manager with encryption"
 authors = ["Crefax"]
 edition = "2021"

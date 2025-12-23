@@ -47,6 +47,60 @@ jobs:
             
             ### Installation
             - **Windows:** Download `.msi` or `.exe` installer below
+            - **Linux:** Download `.deb` (Debian/Ubuntu), `.rpm` (Fedora/RHEL), or `.AppImage` (Universal)
+            
+            ### Auto-Update
+            Existing users will be notified automatically!
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
+
+  build-linux:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Tauri App with Signing
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'ClipCrab ${{ github.ref_name }}'
+          releaseBody: |
+            ## 🦀 ClipCrab ${{ github.ref_name }}
+            
+            ### Installation
+            - **Windows:** Download `.msi` or `.exe` installer below
+            - **Linux:** Download `.deb` (Debian/Ubuntu), `.rpm` (Fedora/RHEL), or `.AppImage` (Universal)
             
             ### Auto-Update
             Existing users will be notified automatically!
