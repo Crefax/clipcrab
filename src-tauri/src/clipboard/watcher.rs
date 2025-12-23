@@ -60,12 +60,36 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
         let conn = database::init_db_for_watcher();
 
         // Linux'ta clipboard erişimi başarısız olabilir (X11/Wayland)
-        let mut clipboard = match Clipboard::new() {
-            Ok(cb) => cb,
-            Err(e) => {
+        // Retry mekanizması ile dene
+        let mut clipboard = None;
+        let mut retry_count = 0;
+        const MAX_RETRIES: u32 = 5;
+
+        while clipboard.is_none() && retry_count < MAX_RETRIES {
+            match Clipboard::new() {
+                Ok(cb) => {
+                    clipboard = Some(cb);
+                    println!("Clipboard initialized successfully");
+                }
+                Err(e) => {
+                    retry_count += 1;
+                    eprintln!(
+                        "Failed to initialize clipboard (attempt {}/{}): {}",
+                        retry_count, MAX_RETRIES, e
+                    );
+                    if retry_count < MAX_RETRIES {
+                        thread::sleep(Duration::from_secs(2));
+                    }
+                }
+            }
+        }
+
+        let mut clipboard = match clipboard {
+            Some(cb) => cb,
+            None => {
                 eprintln!(
-                    "Failed to initialize clipboard: {}. Clipboard watcher disabled.",
-                    e
+                    "Clipboard watcher disabled after {} failed attempts.",
+                    MAX_RETRIES
                 );
                 return;
             }
@@ -73,46 +97,61 @@ pub fn start_clipboard_watcher(app_handle: tauri::AppHandle) {
 
         let mut last_clip_text = clipboard.get_text().unwrap_or_default();
         let mut last_clip_image = clipboard.get_image().ok();
+        let mut consecutive_errors = 0;
+        const MAX_CONSECUTIVE_ERRORS: u32 = 10;
 
         loop {
+            // Çok fazla ardışık hata varsa yavaşla
+            if consecutive_errors >= MAX_CONSECUTIVE_ERRORS {
+                thread::sleep(Duration::from_secs(5));
+                consecutive_errors = 0;
+                continue;
+            }
+
             // Metin kontrolü
-            if let Ok(current) = clipboard.get_text() {
-                if current != last_clip_text && !current.trim().is_empty() {
-                    println!("New text content: {}", current);
+            match clipboard.get_text() {
+                Ok(current) => {
+                    consecutive_errors = 0;
+                    if current != last_clip_text && !current.trim().is_empty() {
+                        println!("New text content: {}", current);
 
-                    // Kategoriyi belirle (kayıt anında)
-                    let category = detect_category(&current);
+                        // Kategoriyi belirle (kayıt anında)
+                        let category = detect_category(&current);
 
-                    // İçeriği şifrele
-                    let encrypted_content = match security::encrypt(&current) {
-                        Ok(encrypted) => encrypted,
-                        Err(e) => {
-                            eprintln!("Failed to encrypt content: {}", e);
-                            current.clone()
-                        }
-                    };
-
-                    // Veritabanına ekle (kategori ile birlikte)
-                    let result = conn.execute(
-                        "INSERT INTO clipboard_history (content, content_type, category, created_at, is_encrypted) VALUES (?1, 'text', ?2, datetime('now', 'localtime'), 1)",
-                        [&encrypted_content, &category.to_string()],
-                    );
-
-                    if result.is_ok() {
-                        // Frontend'e yeni öğe eventi gönder
-                        let event = ClipboardUpdateEvent {
-                            action: "refresh".to_string(),
-                            message: "New text clipboard item added".to_string(),
+                        // İçeriği şifrele
+                        let encrypted_content = match security::encrypt(&current) {
+                            Ok(encrypted) => encrypted,
+                            Err(e) => {
+                                eprintln!("Failed to encrypt content: {}", e);
+                                current.clone()
+                            }
                         };
 
-                        println!("Event sending: {:?}", event);
-                        match app_handle.emit("clipboard-update", event) {
-                            Ok(_) => println!("Event sent successfully"),
-                            Err(e) => eprintln!("Failed to send event: {}", e),
-                        }
-                    }
+                        // Veritabanına ekle (kategori ile birlikte)
+                        let result = conn.execute(
+                            "INSERT INTO clipboard_history (content, content_type, category, created_at, is_encrypted) VALUES (?1, 'text', ?2, datetime('now', 'localtime'), 1)",
+                            [&encrypted_content, &category.to_string()],
+                        );
 
-                    last_clip_text = current;
+                        if result.is_ok() {
+                            // Frontend'e yeni öğe eventi gönder
+                            let event = ClipboardUpdateEvent {
+                                action: "refresh".to_string(),
+                                message: "New text clipboard item added".to_string(),
+                            };
+
+                            println!("Event sending: {:?}", event);
+                            match app_handle.emit("clipboard-update", event) {
+                                Ok(_) => println!("Event sent successfully"),
+                                Err(e) => eprintln!("Failed to send event: {}", e),
+                            }
+                        }
+
+                        last_clip_text = current;
+                    }
+                }
+                Err(_) => {
+                    consecutive_errors += 1;
                 }
             }
 

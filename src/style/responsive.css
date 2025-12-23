@@ -2,8 +2,8 @@
    ClipCrab - Responsive Design
    ======================================== */
 
-/* ========== Tablet (768px and below) ========== */
-@media (max-width: 768px) {
+/* ========== Tablet (600px and below) ========== */
+@media (max-width: 600px) {
   :root {
     --sidebar-width: 64px;
   }
