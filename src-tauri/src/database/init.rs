@@ -40,11 +40,52 @@ pub fn init_db() -> Connection {
                 image_data TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 pinned INTEGER DEFAULT 0,
-                is_encrypted INTEGER DEFAULT 1
+                is_encrypted INTEGER DEFAULT 1,
+                content_hash TEXT DEFAULT '',
+                content_size INTEGER DEFAULT 0,
+                image_size INTEGER,
+                image_width INTEGER,
+                image_height INTEGER,
+                thumbnail_data TEXT,
+                preview TEXT,
+                source_app TEXT,
+                last_seen_at TEXT,
+                format_mask TEXT,
+                schema_version INTEGER DEFAULT 2
             )",
             [],
         )
         .expect("Failed to create table");
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS schema_migrations (
+                version INTEGER PRIMARY KEY,
+                applied_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )",
+            [],
+        )
+        .ok();
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )",
+            [],
+        )
+        .ok();
+
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS app_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                level TEXT NOT NULL,
+                target TEXT NOT NULL,
+                message TEXT NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )",
+            [],
+        )
+        .ok();
 
         // Index oluştur (sorgu performansı için)
         conn.execute(
@@ -56,6 +97,12 @@ pub fn init_db() -> Connection {
         // Kategori için index (filtreleme hızı için)
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_clipboard_category ON clipboard_history(category)",
+            [],
+        )
+        .ok();
+
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_clipboard_hash ON clipboard_history(content_hash)",
             [],
         )
         .ok();
@@ -71,6 +118,8 @@ pub fn init_db() -> Connection {
 
 // Watcher için ayrı bağlantı (uzun süreli kullanım için)
 pub fn init_db_for_watcher() -> Connection {
+    let _ = init_db();
+
     let db_path = get_db_path();
     let conn = Connection::open(&db_path).expect("Failed to open database");
 
@@ -80,6 +129,8 @@ pub fn init_db_for_watcher() -> Connection {
          PRAGMA synchronous = NORMAL;",
     )
     .ok();
+
+    super::migrate::migrate_database(&conn);
 
     conn
 }

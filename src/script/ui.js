@@ -1,5 +1,5 @@
 import { waitForI18n, formatTimeAgo, truncateText, getTextIcon, getTextTypeLabel, showToast } from './utils.js';
-import { copyToClipboard, deleteHistoryItem, togglePin, getClipboardHistory, getFilteredHistory, getSearchQuery, loadClipboardHistory, loadMoreItems, canLoadMore, getIsLoading, getTotalCount, hasActiveFilter, canLoadMoreFiltered, loadMoreFilteredItems } from './clipboard.js';
+import { copyToClipboard, deleteHistoryItem, togglePin, getClipboardItem, getClipboardHistory, getFilteredHistory, getSearchQuery, requestHistoryRefresh, loadMoreItems, canLoadMore, getIsLoading, getTotalCount, hasActiveFilter, canLoadMoreFiltered, loadMoreFilteredItems } from './clipboard.js';
 
 const { invoke } = window.__TAURI__.core || {};
 
@@ -29,7 +29,31 @@ export const elements = {
   settingsPage: document.getElementById("settings-page"),
   // Settings
   autostartCheckbox: document.getElementById("autostart-enabled"),
-  themeSelector: document.getElementById("theme-selector")
+  themeSelector: document.getElementById("theme-selector"),
+  diagnosticsDbSize: document.getElementById("diagnostics-db-size"),
+  diagnosticsItems: document.getElementById("diagnostics-items"),
+  diagnosticsImages: document.getElementById("diagnostics-images"),
+  diagnosticsImagePayload: document.getElementById("diagnostics-image-payload"),
+  diagnosticsWebView2: document.getElementById("diagnostics-webview2"),
+  diagnosticsLogCount: document.getElementById("diagnostics-log-count"),
+  diagnosticsLastError: document.getElementById("diagnostics-last-error"),
+  diagnosticsPath: document.getElementById("diagnostics-path"),
+  diagnosticsLogPath: document.getElementById("diagnostics-log-path"),
+  refreshDiagnosticsBtn: document.getElementById("refresh-diagnostics"),
+  compactDatabaseBtn: document.getElementById("compact-database"),
+  repairUiCacheBtn: document.getElementById("repair-ui-cache"),
+  exportLogsBtn: document.getElementById("export-logs"),
+  settingMaxHistory: document.getElementById("setting-max-history"),
+  settingMaxDbSize: document.getElementById("setting-max-db-size"),
+  settingMaxTextSize: document.getElementById("setting-max-text-size"),
+  settingMaxImageSize: document.getElementById("setting-max-image-size"),
+  settingAutoClearDays: document.getElementById("setting-auto-clear-days"),
+  settingRetentionEnabled: document.getElementById("setting-retention-enabled"),
+  settingCaptureImages: document.getElementById("setting-capture-images"),
+  settingCaptureLargeText: document.getElementById("setting-capture-large-text"),
+  settingShowNotifications: document.getElementById("setting-show-notifications"),
+  settingIgnoreApps: document.getElementById("setting-ignore-apps"),
+  saveAppSettingsBtn: document.getElementById("save-app-settings")
 };
 
 // i18n
@@ -50,7 +74,7 @@ export function initI18n() {
   initNavigation();
   initSettings();
   initImportExport();
-  updatePageTexts();
+  initDiagnostics();
 }
 
 // Navigation
@@ -71,9 +95,10 @@ export function switchPage(pageName) {
   if (targetTab) targetTab.classList.add('active');
   
   if (pageName === 'history') {
-    loadClipboardHistory();
+    requestHistoryRefresh({ force: true, delay: 0 });
   } else if (pageName === 'settings') {
     loadSettings();
+    loadDiagnostics();
   }
 }
 
@@ -118,9 +143,92 @@ export function initSettings() {
       }
     });
   }
+
+  if (elements.settingRetentionEnabled) {
+    elements.settingRetentionEnabled.addEventListener('change', syncRetentionControls);
+  }
+}
+
+async function loadAppSettings() {
+  if (!invoke || !elements.settingMaxHistory) return;
+
+  try {
+    const settings = await invoke('get_settings');
+    elements.settingMaxHistory.value = settings.max_history;
+    elements.settingMaxDbSize.value = settings.max_db_size_mb;
+    elements.settingMaxTextSize.value = settings.max_text_size_kb;
+    elements.settingMaxImageSize.value = settings.max_image_size_mb;
+    elements.settingAutoClearDays.value = settings.auto_clear_days;
+    elements.settingRetentionEnabled.checked = Boolean(settings.retention_enabled);
+    elements.settingCaptureImages.checked = settings.capture_images;
+    elements.settingCaptureLargeText.checked = settings.capture_large_text;
+    elements.settingShowNotifications.checked = settings.show_notifications;
+    syncRetentionControls();
+    elements.settingIgnoreApps.value = (settings.ignore_apps || []).join('\n');
+    localStorage.setItem('clipcrab_settings', JSON.stringify({
+      maxHistory: String(settings.max_history),
+      retentionEnabled: Boolean(settings.retention_enabled),
+      autoClear: settings.auto_clear_days > 0 ? String(settings.auto_clear_days) : 'never',
+      showNotifications: settings.show_notifications,
+      soundEnabled: false,
+      theme: localStorage.getItem('theme') || 'auto',
+      compactMode: false
+    }));
+  } catch (error) {
+    console.error('Failed to load app settings:', error);
+  }
+}
+
+async function saveAppSettings() {
+  if (!invoke || !elements.saveAppSettingsBtn) return;
+
+  const settings = {
+    retention_enabled: Boolean(elements.settingRetentionEnabled.checked),
+    max_history: Number(elements.settingMaxHistory.value) || 1000,
+    max_db_size_mb: Number(elements.settingMaxDbSize.value) || 250,
+    max_text_size_kb: Number(elements.settingMaxTextSize.value) || 512,
+    max_image_size_mb: Number(elements.settingMaxImageSize.value) || 5,
+    auto_clear_days: Number(elements.settingAutoClearDays.value) || 0,
+    capture_images: Boolean(elements.settingCaptureImages.checked),
+    capture_large_text: Boolean(elements.settingCaptureLargeText.checked),
+    show_notifications: Boolean(elements.settingShowNotifications.checked),
+    ignore_apps: elements.settingIgnoreApps.value
+      .split('\n')
+      .map(value => value.trim())
+      .filter(Boolean)
+  };
+
+  elements.saveAppSettingsBtn.disabled = true;
+  try {
+    const saved = await invoke('set_settings', { settings });
+    showToast('Settings saved', 'success');
+    await loadAppSettings();
+    await loadDiagnostics();
+    requestHistoryRefresh({ force: true, delay: 0 });
+    return saved;
+  } catch (error) {
+    console.error('Failed to save app settings:', error);
+    showToast('Settings save failed', 'error');
+    return null;
+  } finally {
+    elements.saveAppSettingsBtn.disabled = false;
+  }
+}
+
+function syncRetentionControls() {
+  const enabled = Boolean(elements.settingRetentionEnabled?.checked);
+  [
+    elements.settingMaxHistory,
+    elements.settingMaxDbSize,
+    elements.settingAutoClearDays
+  ].forEach(input => {
+    if (input) input.disabled = !enabled;
+  });
 }
 
 export async function loadSettings() {
+  await loadAppSettings();
+
   // Load current theme
   const currentTheme = localStorage.getItem('theme') || 'auto';
   if (elements.themeSelector) {
@@ -148,7 +256,7 @@ export async function loadSettings() {
         autostartLabel.textContent = await window.i18n.t('settings.startup.start_with_system') || 'Start with system';
       }
     } catch (e) {
-      console.log('Platform detection failed:', e);
+      console.error('Platform detection failed:', e);
     }
   }
   
@@ -170,6 +278,111 @@ export async function loadSettings() {
       elements.autostartCheckbox.checked = false;
     }
   }
+}
+
+export function initDiagnostics() {
+  if (elements.refreshDiagnosticsBtn) {
+    elements.refreshDiagnosticsBtn.addEventListener('click', loadDiagnostics);
+  }
+
+  if (elements.compactDatabaseBtn) {
+    elements.compactDatabaseBtn.addEventListener('click', async () => {
+      elements.compactDatabaseBtn.disabled = true;
+      try {
+        await invoke('compact_database');
+        showToast('Database compacted', 'success');
+        await loadDiagnostics();
+        requestHistoryRefresh({ force: true, delay: 0 });
+      } catch (error) {
+        console.error('Compact database failed:', error);
+        showToast('Database compact failed', 'error');
+      } finally {
+        elements.compactDatabaseBtn.disabled = false;
+      }
+    });
+  }
+
+  if (elements.repairUiCacheBtn) {
+    elements.repairUiCacheBtn.addEventListener('click', async () => {
+      try {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(registration => registration.unregister()));
+        }
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map(name => caches.delete(name)));
+        }
+        await invoke('reload_frontend');
+      } catch (error) {
+        console.error('Repair UI cache failed:', error);
+        showToast('UI repair failed', 'error');
+      }
+    });
+  }
+
+  if (elements.exportLogsBtn) {
+    elements.exportLogsBtn.addEventListener('click', exportLogs);
+  }
+
+  if (elements.saveAppSettingsBtn) {
+    elements.saveAppSettingsBtn.addEventListener('click', saveAppSettings);
+  }
+}
+
+export async function loadDiagnostics() {
+  if (!invoke || !elements.diagnosticsDbSize) return;
+
+  try {
+    const diagnostics = await invoke('get_diagnostics');
+    elements.diagnosticsDbSize.textContent = formatBytes(diagnostics.db_size);
+    elements.diagnosticsItems.textContent = diagnostics.item_count;
+    elements.diagnosticsImages.textContent = diagnostics.image_count;
+    elements.diagnosticsImagePayload.textContent = formatBytes(diagnostics.image_payload_bytes);
+    elements.diagnosticsWebView2.textContent = diagnostics.webview2_version || 'Unavailable';
+    elements.diagnosticsLogCount.textContent = diagnostics.app_log_count;
+    elements.diagnosticsLastError.textContent = diagnostics.last_frontend_error || 'No frontend errors';
+    elements.diagnosticsPath.textContent = diagnostics.db_path;
+    elements.diagnosticsLogPath.textContent = diagnostics.log_path;
+  } catch (error) {
+    console.error('Diagnostics failed:', error);
+  }
+}
+
+async function exportLogs() {
+  try {
+    const logs = await invoke('export_app_logs');
+    const blob = new Blob([logs], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'clipcrab_logs.txt';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+    showToast('Logs exported', 'success');
+  } catch (error) {
+    console.error('Export logs failed:', error);
+    showToast('Log export failed', 'error');
+  }
+}
+
+function formatBytes(value) {
+  const bytes = Number(value) || 0;
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let current = bytes / 1024;
+  let index = 0;
+
+  while (current >= 1024 && index < units.length - 1) {
+    current /= 1024;
+    index += 1;
+  }
+
+  return `${current.toFixed(current >= 10 ? 1 : 2)} ${units[index]}`;
 }
 
 export function applyTheme(theme) {
@@ -257,6 +470,8 @@ export async function createHistoryItem(item, index) {
   const div = document.createElement("div");
   div.className = "history-item fade-in";
   div.style.animationDelay = `${index * 0.05}s`;
+  div.dataset.index = String(index);
+  div.setAttribute('role', 'option');
   
   const timeAgo = await formatTimeAgo(item.created_at);
   const typeLabel = await getTextTypeLabel(item.content, item.content_type);
@@ -265,11 +480,15 @@ export async function createHistoryItem(item, index) {
   const copyText = await window.i18n.t('clipboard.copy');
   const deleteText = await window.i18n.t('clipboard.delete');
   const pinText = item.pinned ? await window.i18n.t('clipboard.unpin') : await window.i18n.t('clipboard.pin');
+  const displaySize = item.content_size || item.content.length;
   
   // Content
   let contentHtml = '';
-  if (item.content_type === 'image' && item.image_data) {
-    contentHtml = `<img src="data:image/png;base64,${item.image_data}" alt="Image" class="image-preview" />`;
+  if (item.content_type === 'image') {
+    const previewImage = item.thumbnail_data || item.image_data;
+    contentHtml = previewImage
+      ? `<img src="data:image/png;base64,${previewImage}" alt="Image" class="image-preview" loading="lazy" decoding="async" />`
+      : `<div class="image-placeholder"><i class="fas fa-image"></i><span>${item.image_width || '?'}x${item.image_height || '?'}</span></div>`;
   } else {
     contentHtml = `<div class="content line-clamp-3">${escapeHtml(item.content)}</div>`;
   }
@@ -280,7 +499,7 @@ export async function createHistoryItem(item, index) {
     <div class="meta">
       <span class="meta-item"><i class="fas fa-clock"></i>${timeAgo}</span>
       <span class="meta-item"><i class="${textIcon}"></i>${typeLabel}</span>
-      <span class="meta-item"><i class="fas fa-text-width"></i>${item.content.length}</span>
+      <span class="meta-item"><i class="fas fa-text-width"></i>${displaySize}</span>
       <div class="actions">
         <button class="action-btn pin ${item.pinned ? 'pinned' : ''}" title="${pinText}">
           <i class="fas fa-thumbtack"></i>
@@ -307,7 +526,7 @@ export async function createHistoryItem(item, index) {
   
   copyBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    copyToClipboard(item.content, item.content_type, item.image_data);
+    copyToClipboard(item);
   });
   
   deleteBtn.addEventListener('click', (e) => {
@@ -316,6 +535,8 @@ export async function createHistoryItem(item, index) {
   });
   
   div.addEventListener('click', () => {
+    selectedIndex = index;
+    updateSelectedCard();
     showMessageModal(item);
   });
   
@@ -373,16 +594,25 @@ export async function showDeleteConfirmation(item) {
 // Message modal
 export async function showMessageModal(item) {
   await waitForI18n();
+  let fullItem = item;
+  try {
+    fullItem = await getClipboardItem(item.id);
+  } catch (error) {
+    console.error('Failed to load full clipboard item:', error);
+    showToast('Failed to load full item', 'error');
+  }
+
   const copyText = await window.i18n.t('clipboard.copy');
   const deleteText = await window.i18n.t('clipboard.delete');
-  const pinText = item.pinned ? await window.i18n.t('clipboard.unpin') : await window.i18n.t('clipboard.pin');
+  const pinText = fullItem.pinned ? await window.i18n.t('clipboard.unpin') : await window.i18n.t('clipboard.pin');
+  const copyPlainText = 'Copy Plain';
   
-  const timeAgo = await formatTimeAgo(item.created_at);
-  const typeLabel = await getTextTypeLabel(item.content, item.content_type);
-  const textIcon = getTextIcon(item.content, item.content_type);
+  const timeAgo = await formatTimeAgo(fullItem.created_at);
+  const typeLabel = await getTextTypeLabel(fullItem.content, fullItem.content_type);
+  const textIcon = getTextIcon(fullItem.content, fullItem.content_type);
   
   // Resim için farklı modal class'ı kullan
-  const isImage = item.content_type === 'image' && item.image_data;
+  const isImage = fullItem.content_type === 'image' && fullItem.image_data;
   const modalClass = isImage ? 'modal message-modal image-modal' : 'modal message-modal';
   
   const modal = document.createElement('div');
@@ -396,13 +626,13 @@ export async function showMessageModal(item) {
       <div class="modal-body">
         <div class="${isImage ? 'content-preview' : 'message-content'}">
           ${isImage
-            ? `<img src="data:image/png;base64,${item.image_data}" alt="Image" />`
-            : `<pre>${escapeHtml(item.content)}</pre>`}
+            ? `<img src="data:image/png;base64,${fullItem.image_data}" alt="Image" />`
+            : `<pre>${escapeHtml(fullItem.content)}</pre>`}
         </div>
         ${!isImage ? `
         <div class="message-meta">
           <span class="meta-item"><i class="fas fa-clock"></i>${timeAgo}</span>
-          <span class="meta-item"><i class="fas fa-text-width"></i>${item.content.length} chars</span>
+          <span class="meta-item"><i class="fas fa-text-width"></i>${fullItem.content.length} chars</span>
         </div>
         ` : ''}
       </div>
@@ -413,6 +643,11 @@ export async function showMessageModal(item) {
         <button class="btn btn-primary" id="modal-copy">
           <i class="fas fa-copy"></i> ${copyText}
         </button>
+        ${!isImage ? `
+        <button class="btn btn-secondary" id="modal-copy-plain">
+          <i class="fas fa-align-left"></i> ${copyPlainText}
+        </button>
+        ` : ''}
         <button class="btn btn-danger" id="modal-delete">
           <i class="fas fa-trash"></i> ${deleteText}
         </button>
@@ -427,17 +662,24 @@ export async function showMessageModal(item) {
   });
   
   modal.querySelector('#modal-pin').addEventListener('click', async () => {
-    await togglePin(item.id);
+    await togglePin(fullItem.id);
     document.body.removeChild(modal);
   });
   
   modal.querySelector('#modal-copy').addEventListener('click', () => {
-    copyToClipboard(item.content, item.content_type, item.image_data);
+    copyToClipboard(fullItem);
   });
+
+  const copyPlainBtn = modal.querySelector('#modal-copy-plain');
+  if (copyPlainBtn) {
+    copyPlainBtn.addEventListener('click', () => {
+      copyToClipboard(fullItem, undefined, undefined, { plainText: true });
+    });
+  }
   
   modal.querySelector('#modal-delete').addEventListener('click', async () => {
     document.body.removeChild(modal);
-    await showDeleteConfirmation(item);
+    await showDeleteConfirmation(fullItem);
   });
   
   modal.addEventListener('click', (e) => {
@@ -447,9 +689,13 @@ export async function showMessageModal(item) {
 
 // Render history
 let renderedCount = 0;
+let selectedIndex = 0;
 
 export async function renderHistory(appendMode = false) {
   await waitForI18n();
+  if (window.__clipcrabHealth) {
+    window.__clipcrabHealth.lastRenderAt = Date.now();
+  }
   
   const hasFilterOrSearch = hasActiveFilter() || getSearchQuery();
   const itemsToRender = hasFilterOrSearch ? getFilteredHistory() : getClipboardHistory();
@@ -480,6 +726,8 @@ export async function renderHistory(appendMode = false) {
     elements.historyList.appendChild(div);
   }
   renderedCount = itemsToRender.length;
+  selectedIndex = Math.min(selectedIndex, Math.max(0, itemsToRender.length - 1));
+  updateSelectedCard();
   
   // Loading indicator kontrolü (hasFilterOrSearch zaten yukarıda tanımlı)
   if (hasFilterOrSearch) {
@@ -496,6 +744,75 @@ export async function renderHistory(appendMode = false) {
     } else {
       removeLoadingIndicator();
     }
+  }
+}
+
+function getCurrentHistoryItems() {
+  const hasFilterOrSearch = hasActiveFilter() || getSearchQuery();
+  return hasFilterOrSearch ? getFilteredHistory() : getClipboardHistory();
+}
+
+function getSelectedItem() {
+  const items = getCurrentHistoryItems();
+  if (items.length === 0) return null;
+  selectedIndex = Math.min(Math.max(selectedIndex, 0), items.length - 1);
+  return items[selectedIndex];
+}
+
+function updateSelectedCard() {
+  const cards = elements.historyList?.querySelectorAll('.history-item') || [];
+  cards.forEach((card, index) => {
+    const selected = index === selectedIndex;
+    card.classList.toggle('selected', selected);
+    card.setAttribute('aria-selected', selected ? 'true' : 'false');
+  });
+}
+
+export function moveHistorySelection(delta) {
+  const items = getCurrentHistoryItems();
+  if (items.length === 0) return;
+
+  selectedIndex = Math.min(Math.max(selectedIndex + delta, 0), items.length - 1);
+  updateSelectedCard();
+  const selectedCard = elements.historyList?.querySelector(`.history-item[data-index="${selectedIndex}"]`);
+  selectedCard?.scrollIntoView({ block: 'nearest' });
+}
+
+export async function openSelectedHistoryItem() {
+  const item = getSelectedItem();
+  if (item) {
+    await showMessageModal(item);
+  }
+}
+
+export async function copySelectedHistoryItem() {
+  const item = getSelectedItem();
+  if (item) {
+    await copyToClipboard(item);
+  }
+}
+
+export async function deleteSelectedHistoryItem() {
+  const item = getSelectedItem();
+  if (item) {
+    await showDeleteConfirmation(item);
+  }
+}
+
+export async function toggleSelectedPin() {
+  const item = getSelectedItem();
+  if (item) {
+    await togglePin(item.id);
+  }
+}
+
+export async function quickPickHistoryItem(position) {
+  const items = getCurrentHistoryItems();
+  const item = items[position - 1];
+  if (item) {
+    selectedIndex = position - 1;
+    updateSelectedCard();
+    await copyToClipboard(item);
   }
 }
 
@@ -593,7 +910,7 @@ export function initImportExport() {
           const json = ev.target.result;
           const count = await invoke('import_clipboard_history', { jsonData: json });
           showToast(`Imported ${count} items!`, 'success');
-          await loadClipboardHistory();
+          requestHistoryRefresh({ force: true, delay: 0 });
         } catch (err) {
           showToast('Import failed', 'error');
         }

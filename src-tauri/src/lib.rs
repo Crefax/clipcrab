@@ -1,15 +1,32 @@
 pub mod clipboard;
 pub mod commands;
 pub mod database;
+pub mod frontend_health;
+pub mod global_hotkey;
 pub mod models;
 pub mod security;
 
+use std::time::Duration;
 use tauri::{
     image::Image,
     menu::{MenuBuilder, MenuItem},
     tray::TrayIconBuilder,
-    Manager, WindowEvent,
+    Emitter, Manager, WebviewWindow, WindowEvent,
 };
+
+fn show_main_window(window: &WebviewWindow) {
+    let _ = window.show();
+    let _ = window.set_focus();
+    if frontend_health::frontend_heartbeat_is_stale(Duration::from_secs(300)) {
+        let _ = window.eval("window.location.reload()");
+    }
+    let _ = window.emit("app-window-shown", ());
+}
+
+fn hide_main_window(window: &WebviewWindow) {
+    let _ = window.emit("app-window-hidden", ());
+    let _ = window.hide();
+}
 
 fn enable_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     // Create menu items
@@ -34,13 +51,12 @@ fn enable_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => {
                 if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
+                    show_main_window(&window);
                 }
             }
             "hide" => {
                 if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.hide();
+                    hide_main_window(&window);
                 }
             }
             "quit" => {
@@ -58,8 +74,7 @@ fn enable_tray(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                         if app.is_visible().unwrap_or(false) {
                             let _ = app.set_focus(); // Gizleme yerine sadece focus yap
                         } else {
-                            let _ = app.show();
-                            let _ = app.set_focus();
+                            show_main_window(&app);
                         }
                     }
                 }
@@ -88,6 +103,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .on_window_event(|window, event| {
             if let WindowEvent::CloseRequested { api, .. } = event {
+                let _ = window.emit("app-window-hidden", ());
                 let _ = window.hide();
                 api.prevent_close();
             }
@@ -100,25 +116,36 @@ pub fn run() {
             // DevTools'u aç (debug için)
             #[cfg(debug_assertions)]
             if let Some(window) = app.get_webview_window("main") {
-                let _ = window.open_devtools();
+                window.open_devtools();
             }
 
             // Veritabanı migration'ını çalıştır
-            let _ = commands::force_update_categories();
-
             clipboard::start_clipboard_watcher(app.handle().clone());
+            global_hotkey::start_quick_open_hotkey(app.handle().clone());
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_clipboard_history,
+            commands::get_clipboard_item,
             commands::get_clipboard_count,
             commands::search_clipboard_history,
+            commands::copy_clipboard_item,
             commands::delete_clipboard_item,
             commands::clear_all_history,
             commands::toggle_pin,
             commands::export_clipboard_history,
             commands::import_clipboard_history,
+            commands::get_diagnostics,
+            commands::compact_database,
+            commands::log_frontend_error,
+            commands::get_app_logs,
+            commands::export_app_logs,
+            commands::reload_frontend,
+            commands::hide_frontend,
+            commands::get_settings,
+            commands::set_settings,
+            frontend_health::report_frontend_status,
             commands::is_first_run,
             commands::complete_first_run,
             commands::force_update_categories

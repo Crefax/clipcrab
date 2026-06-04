@@ -1,32 +1,45 @@
-import { elements, setupInfiniteScroll } from './ui.js';
-import { loadClipboardHistory, clearAllHistory, setSearchQuery, filterHistory, toggleContentFilter, getActiveFilters } from './clipboard.js';
+import { elements, setupInfiniteScroll, moveHistorySelection, openSelectedHistoryItem, copySelectedHistoryItem, deleteSelectedHistoryItem, toggleSelectedPin, quickPickHistoryItem } from './ui.js';
+import { clearAllHistory, setSearchQuery, toggleContentFilter, getActiveFilters, requestHistoryRefresh, markHistoryDirty, refreshAfterShow } from './clipboard.js';
 import { showToast } from './utils.js';
+
+const { invoke } = window.__TAURI__.core;
 
 // Event Handlers
 export function handleClipboardUpdate(eventData) {
-  console.log('Clipboard update event received:', eventData);
-  
   if (eventData.action === 'refresh') {
-    console.log('Refreshing list...');
-    // Listeyi yenile
-    loadClipboardHistory();
-    showToast(eventData.message, 'success');
+    if (document.hidden) {
+      markHistoryDirty();
+      return;
+    }
+
+    requestHistoryRefresh();
+    if (eventData.message && notificationsEnabled()) {
+      showToast(eventData.message, 'success');
+    }
+  }
+}
+
+function notificationsEnabled() {
+  try {
+    const stored = localStorage.getItem('clipcrab_settings');
+    if (!stored) return true;
+    return JSON.parse(stored).showNotifications !== false;
+  } catch {
+    return true;
   }
 }
 
 // Event Listeners
 export function setupEventListeners() {
   // Clipboard update event listener
-  console.log('Setting up event listeners...');
   window.__TAURI__.event.listen('clipboard-update', (event) => {
-    console.log('Event received:', event);
     handleClipboardUpdate(event.payload);
   }).catch(error => {
     console.error('Event listener error:', error);
   });
   
   // Refresh button
-  elements.refreshBtn.addEventListener("click", loadClipboardHistory);
+  elements.refreshBtn.addEventListener("click", () => requestHistoryRefresh({ force: true, delay: 0 }));
   
   // Clear all button
   elements.clearAllBtn.addEventListener("click", clearAllHistory);
@@ -51,6 +64,14 @@ export function setupEventListeners() {
   
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = document.querySelector('.modal-overlay');
+      if (modal) {
+        modal.remove();
+        return;
+      }
+    }
+
     // Ctrl/Cmd + F for search
     if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
       e.preventDefault();
@@ -60,7 +81,7 @@ export function setupEventListeners() {
     // Ctrl/Cmd + R for refresh
     if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
       e.preventDefault();
-      loadClipboardHistory();
+      requestHistoryRefresh({ force: true, delay: 0 });
     }
     
     // Escape to clear search
@@ -68,6 +89,42 @@ export function setupEventListeners() {
       elements.searchInput.value = '';
       setSearchQuery('');
       elements.searchInput.blur();
+      return;
+    }
+
+    const isTypingTarget = ['INPUT', 'TEXTAREA'].includes(e.target?.tagName);
+    if (isTypingTarget) {
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      moveHistorySelection(1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      moveHistorySelection(-1);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (e.ctrlKey || e.metaKey) {
+        copySelectedHistoryItem();
+      } else {
+        copySelectedHistoryItem().then(() => invoke('hide_frontend').catch(() => {}));
+      }
+    } else if (e.key === 'Delete') {
+      e.preventDefault();
+      deleteSelectedHistoryItem();
+    } else if (e.key.toLowerCase() === 'p') {
+      e.preventDefault();
+      toggleSelectedPin();
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      openSelectedHistoryItem();
+    } else if (/^[1-9]$/.test(e.key)) {
+      e.preventDefault();
+      quickPickHistoryItem(Number(e.key)).then(() => invoke('hide_frontend').catch(() => {}));
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      invoke('hide_frontend').catch(() => {});
     }
   });
   
@@ -76,6 +133,41 @@ export function setupEventListeners() {
   
   // Kategori filtre butonları
   setupFilterButtons();
+
+  window.__TAURI__.event.listen('app-window-shown', () => {
+    refreshAfterShow();
+  }).catch(error => {
+    console.error('Window show listener error:', error);
+  });
+
+  window.__TAURI__.event.listen('app-window-hidden', () => {
+    markHistoryDirty();
+  }).catch(error => {
+    console.error('Window hide listener error:', error);
+  });
+
+  window.__TAURI__.event.listen('quick-open-search', () => {
+    window.switchPage?.('history');
+    refreshAfterShow();
+    requestAnimationFrame(() => {
+      elements.searchInput?.focus();
+      elements.searchInput?.select();
+    });
+  }).catch(error => {
+    console.error('Quick open listener error:', error);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      markHistoryDirty();
+    } else {
+      refreshAfterShow();
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    refreshAfterShow();
+  });
 }
 
 // Filtre butonlarını ayarla - çoklu seçim destekli
@@ -120,14 +212,9 @@ function updateFilterButtonStates() {
 // Service Worker for offline support (if needed)
 export function setupServiceWorker() {
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then(registration => {
-          console.log('SW registered: ', registration);
-        })
-        .catch(registrationError => {
-          console.log('SW registration failed: ', registrationError);
-        });
-    });
+    navigator.serviceWorker
+      .getRegistrations()
+      .then(registrations => registrations.forEach(registration => registration.unregister()))
+      .catch(error => console.error('SW cleanup failed: ', error));
   }
 } 

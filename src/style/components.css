@@ -136,6 +136,11 @@
   transform: translateY(-2px);
 }
 
+.history-item.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
 .history-item .pin-badge {
   position: absolute;
   top: var(--space-3);
@@ -179,6 +184,24 @@
   object-fit: cover;
   border-radius: var(--radius-md);
   margin-bottom: var(--space-3);
+}
+
+.history-item .image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 120px;
+  margin-bottom: var(--space-3);
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+}
+
+.history-item .image-placeholder i {
+  font-size: 1rem;
 }
 
 .history-item .meta {
@@ -535,6 +558,42 @@
   padding-left: calc(1rem + var(--space-3));
 }
 
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.form-row-full {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+}
+
+.form-row input,
+.form-row textarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font: inherit;
+}
+
+.form-row textarea {
+  resize: vertical;
+  min-height: 86px;
+}
+
 /* Toggle Setting */
 .toggle-setting {
   display: flex;
@@ -722,6 +781,41 @@
   background: var(--accent-light);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.diagnostics-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.diagnostic-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.diagnostic-row strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.diagnostic-path {
+  padding: var(--space-3);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+.diagnostic-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 /* ========== Action Cards (Import/Export) ========== */

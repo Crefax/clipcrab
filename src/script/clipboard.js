@@ -14,6 +14,13 @@ let isLoading = false;
 let hasMore = true;
 let totalCount = 0;
 const PAGE_SIZE = 50;
+const REFRESH_DEBOUNCE_MS = 150;
+
+let refreshTimer = null;
+let refreshTimerResolve = null;
+let refreshPromise = null;
+let refreshQueued = false;
+let historyDirty = false;
 
 // Filtreli pagination state
 let filteredOffset = 0;
@@ -27,8 +34,16 @@ const CACHE_MAX_SIZE = 50;
 const CACHE_TTL = 60000; // 1 dakika
 
 // Clipboard Functions
-export async function copyToClipboard(text, contentType, imageData) {
+export async function copyToClipboard(itemOrText, contentType, imageData, options = {}) {
   try {
+    if (itemOrText && typeof itemOrText === 'object' && itemOrText.id) {
+      await invoke("copy_clipboard_item", { id: itemOrText.id, plainText: Boolean(options.plainText) });
+      const toastKey = itemOrText.content_type === 'image' ? 'clipboard.image_copied' : 'clipboard.text_copied';
+      showToast(await window.i18n.t(toastKey), 'success');
+      return;
+    }
+
+    const text = itemOrText;
     if (contentType === 'image' && imageData) {
       // Resmi clipboard'a kopyala
       const response = await fetch(`data:image/png;base64,${imageData}`);
@@ -51,6 +66,76 @@ export async function copyToClipboard(text, contentType, imageData) {
 }
 
 // İlk yükleme - listeyi sıfırlayıp baştan yükle
+export async function getClipboardItem(id) {
+  return invoke("get_clipboard_item", { id });
+}
+
+export function markHistoryDirty() {
+  historyDirty = true;
+}
+
+export function requestHistoryRefresh(options = {}) {
+  const { force = false, delay = REFRESH_DEBOUNCE_MS } = options;
+
+  if (document.hidden && !force) {
+    markHistoryDirty();
+    return Promise.resolve(false);
+  }
+
+  historyDirty = false;
+
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+    if (refreshTimerResolve) {
+      refreshTimerResolve(false);
+      refreshTimerResolve = null;
+    }
+  }
+
+  return new Promise((resolve) => {
+    refreshTimerResolve = resolve;
+    refreshTimer = setTimeout(async () => {
+      refreshTimer = null;
+      const settle = refreshTimerResolve;
+      refreshTimerResolve = null;
+      try {
+        await runRefreshNow();
+        settle?.(true);
+      } catch (error) {
+        console.error('Scheduled refresh failed:', error);
+        settle?.(false);
+      }
+    }, delay);
+  });
+}
+
+export function refreshAfterShow() {
+  if (!historyDirty && refreshPromise) {
+    return refreshPromise;
+  }
+
+  return requestHistoryRefresh({ force: true, delay: 0 });
+}
+
+async function runRefreshNow() {
+  if (refreshPromise) {
+    refreshQueued = true;
+    return refreshPromise;
+  }
+
+  refreshPromise = loadClipboardHistory();
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+    if (refreshQueued) {
+      refreshQueued = false;
+      requestHistoryRefresh({ force: true, delay: 0 });
+    }
+  }
+}
+
 export async function loadClipboardHistory() {
   const elements = getElements();
   try {
@@ -70,7 +155,6 @@ export async function loadClipboardHistory() {
     
     elements.loading.style.display = 'none';
     
-    console.log(`${clipboardHistory.length}/${totalCount} items loaded`);
   } catch (error) {
     console.error("Failed to get clipboard history:", error);
     elements.loading.style.display = 'none';
@@ -89,12 +173,17 @@ export async function loadMoreItems() {
     // Ayarlardan max limit değerini al
     const settings = getStoredSettings();
     const maxHistory = settings.maxHistory;
-    let maxLimit = 500;
+    const retentionEnabled = settings.retentionEnabled === true || settings.retentionEnabled === 'true';
+    let maxLimit = 100000;
     
-    if (maxHistory === 'unlimited') {
-      maxLimit = 100000;
-    } else if (maxHistory) {
-      maxLimit = parseInt(maxHistory, 10);
+    if (retentionEnabled) {
+      if (maxHistory === 'unlimited') {
+        maxLimit = 100000;
+      } else if (maxHistory) {
+        maxLimit = parseInt(maxHistory, 10);
+      } else {
+        maxLimit = 1000;
+      }
     }
     
     // Mevcut offset + PAGE_SIZE, maxLimit'ı geçmesin
@@ -151,7 +240,8 @@ function getStoredSettings() {
   try {
     const stored = localStorage.getItem('clipcrab_settings');
     const defaultSettings = {
-      maxHistory: '500',
+      maxHistory: '1000',
+      retentionEnabled: false,
       autoClear: 'never',
       showNotifications: true,
       soundEnabled: false,
@@ -163,7 +253,8 @@ function getStoredSettings() {
   } catch (error) {
     console.error('Error loading stored settings:', error);
     return {
-      maxHistory: '500',
+      maxHistory: '1000',
+      retentionEnabled: false,
       autoClear: 'never',
       showNotifications: true,
       soundEnabled: false,
@@ -212,7 +303,7 @@ export async function clearAllHistory() {
       await invoke("clear_all_history");
       document.body.removeChild(modal);
       // UI'yi hemen güncelle
-      await loadClipboardHistory();
+      requestHistoryRefresh({ force: true, delay: 0 });
     } catch (error) {
       console.error('Error clearing history:', error);
       showToast('Failed to clear history!', 'error');
@@ -231,7 +322,7 @@ export async function deleteHistoryItem(id) {
   try {
     await invoke("delete_clipboard_item", { id });
     // UI'yi hemen güncelle
-    await loadClipboardHistory();
+    requestHistoryRefresh({ force: true, delay: 0 });
   } catch (error) {
     console.error('Delete error:', error);
     showToast('Delete operation failed!', 'error');
@@ -243,7 +334,7 @@ export async function togglePin(id) {
   try {
     await invoke("toggle_pin", { id });
     // UI'yi hemen güncelle
-    await loadClipboardHistory();
+    requestHistoryRefresh({ force: true, delay: 0 });
   } catch (error) {
     console.error('Pin toggle error:', error);
     showToast('Pin operation failed!', 'error');
@@ -329,16 +420,12 @@ async function searchInDatabase(query, filters = ['all'], isNewSearch = true) {
       const searchLimit = isImageOnly ? 20 : FILTERED_PAGE_SIZE;
       const currentFilteredOffset = isNewSearch ? 0 : filteredOffset;
       
-      console.log('[DEBUG] Searching:', filterString, 'offset:', currentFilteredOffset, 'limit:', searchLimit);
-      
       const results = await invoke("search_clipboard_history", { 
         query: query,
         limit: searchLimit,
         offset: currentFilteredOffset,
         contentFilter: filterString
       });
-      
-      console.log('[DEBUG] Got results:', results.length);
       
       // Eski arama ise sonucu görmezden gel
       if (searchId !== currentSearchId) {
@@ -358,8 +445,6 @@ async function searchInDatabase(query, filters = ['all'], isNewSearch = true) {
       if (results.length < searchLimit) {
         filteredHasMore = false;
       }
-      
-      console.log('[DEBUG] Total filtered:', filteredHistory.length, 'hasMore:', filteredHasMore);
       
       isSearching = false;
       isFilteredLoading = false;
@@ -433,8 +518,6 @@ function hideSearchLoading() {
 
 // Kategori filtresi toggle - çoklu seçim
 export function toggleContentFilter(filter, multiSelect = false) {
-  console.log('[DEBUG] toggleContentFilter:', filter, 'multiSelect:', multiSelect);
-  
   if (filter === 'all') {
     // All seçilirse diğerlerini temizle
     activeFilters.clear();
@@ -458,8 +541,6 @@ export function toggleContentFilter(filter, multiSelect = false) {
       activeFilters.add('all');
     }
   }
-  
-  console.log('[DEBUG] Active filters now:', Array.from(activeFilters));
   
   // Önbelleği temizle (filtre değişti)
   searchCache.clear();

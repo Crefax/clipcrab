@@ -199,6 +199,64 @@
                 </div>
               </div>
 
+              <!-- Retention and capture -->
+              <div class="setting-card">
+                <div class="setting-header">
+                  <i class="fas fa-database"></i>
+                  <h3>History Limits</h3>
+                </div>
+                <div class="setting-content settings-form">
+                  <label class="toggle-setting">
+                    <span>Automatic cleanup</span>
+                    <input type="checkbox" id="setting-retention-enabled" />
+                    <span class="toggle"></span>
+                  </label>
+                  <label class="form-row">
+                    <span>Max history items</span>
+                    <input id="setting-max-history" type="number" min="100" max="100000" step="100" />
+                  </label>
+                  <label class="form-row">
+                    <span>Max DB payload (MB)</span>
+                    <input id="setting-max-db-size" type="number" min="50" max="10000" step="50" />
+                  </label>
+                  <label class="form-row">
+                    <span>Max text size (KB)</span>
+                    <input id="setting-max-text-size" type="number" min="1" max="10240" step="1" />
+                  </label>
+                  <label class="form-row">
+                    <span>Max image size (MB)</span>
+                    <input id="setting-max-image-size" type="number" min="1" max="250" step="1" />
+                  </label>
+                  <label class="form-row">
+                    <span>Auto clear after days</span>
+                    <input id="setting-auto-clear-days" type="number" min="0" max="3650" step="1" />
+                  </label>
+                  <label class="toggle-setting">
+                    <span>Capture images</span>
+                    <input type="checkbox" id="setting-capture-images" />
+                    <span class="toggle"></span>
+                  </label>
+                  <label class="toggle-setting">
+                    <span>Capture large text</span>
+                    <input type="checkbox" id="setting-capture-large-text" />
+                    <span class="toggle"></span>
+                  </label>
+                  <label class="toggle-setting">
+                    <span>Show notifications</span>
+                    <input type="checkbox" id="setting-show-notifications" />
+                    <span class="toggle"></span>
+                  </label>
+                  <label class="form-row form-row-full">
+                    <span>Ignore apps</span>
+                    <textarea id="setting-ignore-apps" rows="4" spellcheck="false"></textarea>
+                  </label>
+                  <button id="save-app-settings" class="btn btn-primary">
+                    <i class="fas fa-floppy-disk"></i>
+                    <span>Save Settings</span>
+                  </button>
+                </div>
+              </div>
+
               <!-- Appearance -->
               <div class="setting-card">
                 <div class="setting-header">
@@ -241,6 +299,61 @@
                     <i class="fas fa-download"></i>
                     <span data-i18n="settings.updates.install_button">Install Update</span>
                   </button>
+                </div>
+              </div>
+
+              <!-- Diagnostics -->
+              <div class="setting-card">
+                <div class="setting-header">
+                  <i class="fas fa-gauge-high"></i>
+                  <h3>Diagnostics</h3>
+                </div>
+                <div class="setting-content diagnostics-panel">
+                  <div class="diagnostic-row">
+                    <span>Database</span>
+                    <strong id="diagnostics-db-size">-</strong>
+                  </div>
+                  <div class="diagnostic-row">
+                    <span>Items</span>
+                    <strong id="diagnostics-items">-</strong>
+                  </div>
+                  <div class="diagnostic-row">
+                    <span>Images</span>
+                    <strong id="diagnostics-images">-</strong>
+                  </div>
+                  <div class="diagnostic-row">
+                    <span>Image payload</span>
+                    <strong id="diagnostics-image-payload">-</strong>
+                  </div>
+                  <div class="diagnostic-row">
+                    <span>WebView2</span>
+                    <strong id="diagnostics-webview2">-</strong>
+                  </div>
+                  <div class="diagnostic-row">
+                    <span>Logs</span>
+                    <strong id="diagnostics-log-count">-</strong>
+                  </div>
+                  <p class="diagnostic-path" id="diagnostics-last-error">No frontend errors</p>
+                  <p class="diagnostic-path" id="diagnostics-path">-</p>
+                  <p class="diagnostic-path" id="diagnostics-log-path">-</p>
+                  <div class="diagnostic-actions">
+                    <button id="refresh-diagnostics" class="btn btn-secondary">
+                      <i class="fas fa-rotate"></i>
+                      <span>Refresh</span>
+                    </button>
+                    <button id="repair-ui-cache" class="btn btn-secondary">
+                      <i class="fas fa-broom"></i>
+                      <span>Repair UI Cache</span>
+                    </button>
+                    <button id="export-logs" class="btn btn-secondary">
+                      <i class="fas fa-file-export"></i>
+                      <span>Export Logs</span>
+                    </button>
+                    <button id="compact-database" class="btn btn-primary">
+                      <i class="fas fa-compress"></i>
+                      <span>Compact</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 

@@ -1,4 +1,5 @@
 use crate::database;
+use rusqlite::params;
 
 #[tauri::command]
 pub fn toggle_pin(id: i64) -> Result<(), String> {
@@ -18,7 +19,7 @@ pub fn toggle_pin(id: i64) -> Result<(), String> {
 
     conn.execute(
         "UPDATE clipboard_history SET pinned = ? WHERE id = ?",
-        [new_pinned as i32, id as i32],
+        params![new_pinned as i32, id],
     )
     .map_err(|e| format!("Failed to update pin status: {}", e))?;
 

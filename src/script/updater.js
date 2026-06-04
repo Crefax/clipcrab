@@ -53,7 +53,7 @@ export async function checkForUpdates(silent = false) {
   
   const updater = getUpdaterAPI();
   if (!updater) {
-    console.log('Updater API not available');
+    console.error('Updater API not available');
     if (!silent) {
       updateMessage.textContent = 'Updater not available in dev mode';
     }

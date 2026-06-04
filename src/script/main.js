@@ -1,7 +1,43 @@
 import { initI18n, updatePageTexts, loadSettings, applyTheme } from './ui.js';
-import { loadClipboardHistory } from './clipboard.js';
+import { requestHistoryRefresh } from './clipboard.js';
 import { setupEventListeners, setupServiceWorker } from './events.js';
 import { initUpdater } from './updater.js';
+
+const { invoke } = window.__TAURI__.core || {};
+
+window.__clipcrabHealth = {
+  startedAt: Date.now(),
+  lastHeartbeatAt: null,
+  lastError: null
+};
+
+function reportFrontendError(level, message) {
+  window.__clipcrabHealth.lastError = {
+    level,
+    message,
+    at: Date.now()
+  };
+
+  if (!invoke) return;
+  invoke('log_frontend_error', { level, message: String(message) }).catch(() => {});
+}
+
+window.addEventListener('error', (event) => {
+  reportFrontendError('error', `${event.message || 'error'} ${event.filename || ''}:${event.lineno || 0}`);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason instanceof Error ? event.reason.stack || event.reason.message : event.reason;
+  reportFrontendError('error', `Unhandled rejection: ${reason}`);
+});
+
+window.__clipcrabOnWindowShown = () => requestHistoryRefresh({ force: true, delay: 0 });
+
+function reportFrontendStatus() {
+  window.__clipcrabHealth.lastHeartbeatAt = Date.now();
+  if (!invoke) return;
+  invoke('report_frontend_status').catch(() => {});
+}
 
 // Load app version dynamically
 async function loadAppVersion() {
@@ -33,9 +69,11 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Load app version
   loadAppVersion();
+  reportFrontendStatus();
+  setInterval(reportFrontendStatus, 15000);
   
   // Paralel async işlemler
-  const clipboardPromise = loadClipboardHistory();
+  const clipboardPromise = requestHistoryRefresh({ force: true, delay: 0 });
   const firstRunPromise = checkFirstRun();
   
   // i18n metinlerini güncelle
@@ -123,7 +161,6 @@ async function showWelcomeModal() {
               await invoke('enable');
             }
           }
-          console.log('Welcome: Autostart etkinleştirildi');
         } catch (error) {
           console.error('Welcome: Autostart etkinleştirilemedi:', error);
         }
