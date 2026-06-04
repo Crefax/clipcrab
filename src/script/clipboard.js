@@ -1,4 +1,4 @@
-import { showToast, waitForI18n } from './utils.js';
+import { showToast, translate, waitForI18n } from './utils.js';
 
 const { invoke } = window.__TAURI__.core;
 
@@ -39,30 +39,39 @@ export async function copyToClipboard(itemOrText, contentType, imageData, option
     if (itemOrText && typeof itemOrText === 'object' && itemOrText.id) {
       await invoke("copy_clipboard_item", { id: itemOrText.id, plainText: Boolean(options.plainText) });
       const toastKey = itemOrText.content_type === 'image' ? 'clipboard.image_copied' : 'clipboard.text_copied';
-      showToast(await window.i18n.t(toastKey), 'success');
+      const fallback = itemOrText.content_type === 'image' ? 'Image copied!' : 'Text copied!';
+      showToast(await translate(toastKey, fallback), 'success');
       return;
     }
 
     const text = itemOrText;
     if (contentType === 'image' && imageData) {
       // Resmi clipboard'a kopyala
-      const response = await fetch(`data:image/png;base64,${imageData}`);
-      const blob = await response.blob();
+      const blob = base64ToBlob(imageData, 'image/png');
       await navigator.clipboard.write([
         new ClipboardItem({
           [blob.type]: blob
         })
       ]);
-      showToast(await window.i18n.t('clipboard.image_copied'), 'success');
+      showToast(await translate('clipboard.image_copied', 'Image copied!'), 'success');
     } else {
       // Metni clipboard'a kopyala
       await navigator.clipboard.writeText(text);
-      showToast(await window.i18n.t('clipboard.text_copied'), 'success');
+      showToast(await translate('clipboard.text_copied', 'Text copied!'), 'success');
     }
   } catch (error) {
     console.error('Copy error:', error);
-    showToast(await window.i18n.t('errors.copy_failed'), 'error');
+    showToast(await translate('errors.copy_failed', 'Copy failed!'), 'error');
   }
+}
+
+function base64ToBlob(base64, mimeType) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new Blob([bytes], { type: mimeType });
 }
 
 // İlk yükleme - listeyi sıfırlayıp baştan yükle

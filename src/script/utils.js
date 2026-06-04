@@ -15,15 +15,24 @@ export async function waitForI18n() {
   }
 }
 
+export async function translate(key, fallback = key, params = {}) {
+  try {
+    await waitForI18n();
+    const value = await window.i18n.t(key, params);
+    return value && value !== key ? value : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export async function formatTimeAgo(timestamp) {
-  await waitForI18n();
   const now = new Date();
   const time = new Date(timestamp);
   const diffInSeconds = Math.floor((now - time) / 1000);
-  if (diffInSeconds < 60) return await window.i18n.t('time.just_now');
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} ${await window.i18n.t('time.minutes_ago')}`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} ${await window.i18n.t('time.hours_ago')}`;
-  return `${Math.floor(diffInSeconds / 86400)} ${await window.i18n.t('time.days_ago')}`;
+  if (diffInSeconds < 60) return await translate('time.just_now', 'Just now');
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} ${await translate('time.minutes_ago', 'minutes ago')}`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} ${await translate('time.hours_ago', 'hours ago')}`;
+  return `${Math.floor(diffInSeconds / 86400)} ${await translate('time.days_ago', 'days ago')}`;
 }
 
 export function formatDateTime(timestamp) {
@@ -53,9 +62,8 @@ export function getTextType(text, contentType) {
 }
 
 export async function getTextTypeLabel(text, contentType) {
-  await waitForI18n();
   const type = getTextType(text, contentType);
-  return await window.i18n.t(`content_types.${type}`);
+  return await translate(`content_types.${type}`, type);
 }
 
 export function getTextIcon(text, contentType) {

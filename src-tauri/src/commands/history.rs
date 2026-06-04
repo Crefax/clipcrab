@@ -115,7 +115,13 @@ pub fn import_clipboard_history(json_data: String) -> Result<usize, String> {
 }
 
 #[tauri::command]
-pub fn get_diagnostics() -> Diagnostics {
+pub async fn get_diagnostics() -> Diagnostics {
+    async_runtime::spawn_blocking(get_diagnostics_sync)
+        .await
+        .unwrap_or_else(|_| fallback_diagnostics())
+}
+
+fn get_diagnostics_sync() -> Diagnostics {
     let conn = database::init_db();
     let db_path = database::get_db_path();
     let log_path = get_log_path();
@@ -165,6 +171,23 @@ pub fn get_diagnostics() -> Diagnostics {
         largest_image_bytes,
         app_log_count,
         last_frontend_error,
+        webview2_version: webview2_version(),
+        log_path: log_path.display().to_string(),
+    }
+}
+
+fn fallback_diagnostics() -> Diagnostics {
+    let db_path = database::get_db_path();
+    let log_path = get_log_path();
+    Diagnostics {
+        db_path: db_path.display().to_string(),
+        db_size: 0,
+        item_count: 0,
+        image_count: 0,
+        image_payload_bytes: 0,
+        largest_image_bytes: 0,
+        app_log_count: 0,
+        last_frontend_error: None,
         webview2_version: webview2_version(),
         log_path: log_path.display().to_string(),
     }

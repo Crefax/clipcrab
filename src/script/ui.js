@@ -216,14 +216,7 @@ async function saveAppSettings() {
 }
 
 function syncRetentionControls() {
-  const enabled = Boolean(elements.settingRetentionEnabled?.checked);
-  [
-    elements.settingMaxHistory,
-    elements.settingMaxDbSize,
-    elements.settingAutoClearDays
-  ].forEach(input => {
-    if (input) input.disabled = !enabled;
-  });
+  // Keep limits editable even when cleanup is off; the toggle only controls enforcement.
 }
 
 export async function loadSettings() {
