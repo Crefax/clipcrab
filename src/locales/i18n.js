@@ -86,10 +86,20 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadLanguage(lang) {
   if (!SUPPORTED_LANGUAGES[lang]) lang = DEFAULT_LANGUAGE;
   if (translations[lang]) return translations[lang];
-  const resp = await fetch(`./locales/${lang}.json`);
-  const data = await resp.json();
-  translations[lang] = data;
-  return data;
+  try {
+    const resp = await fetch(`./locales/${lang}.json`);
+    if (!resp.ok) throw new Error(`Locale ${lang} failed: ${resp.status}`);
+    const data = await resp.json();
+    translations[lang] = data;
+    return data;
+  } catch (error) {
+    console.error(`Locale load failed for ${lang}:`, error);
+    if (lang !== DEFAULT_LANGUAGE) {
+      return loadLanguage(DEFAULT_LANGUAGE);
+    }
+    translations[lang] = {};
+    return translations[lang];
+  }
 }
 
 async function t(key, params = {}, lang = currentLanguage) {

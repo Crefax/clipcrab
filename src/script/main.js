@@ -2,6 +2,7 @@ import { initI18n, updatePageTexts, loadSettings, applyTheme } from './ui.js';
 import { requestHistoryRefresh } from './clipboard.js';
 import { setupEventListeners, setupServiceWorker } from './events.js';
 import { initUpdater } from './updater.js';
+import { getPlatform } from './utils.js';
 
 const { invoke } = window.__TAURI__.core || {};
 
@@ -104,7 +105,7 @@ async function checkFirstRun() {
 // Hoş geldin modalı
 async function showWelcomeModal() {
   // Platform tespiti
-  const os = await window.__TAURI__.os.platform();
+  const os = await getPlatform();
   const isWindows = os === 'windows' || os === 'win32';
   const isLinux = os === 'linux';
   const isMac = os === 'darwin' || os === 'macos';

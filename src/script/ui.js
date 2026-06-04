@@ -1,4 +1,4 @@
-import { waitForI18n, formatTimeAgo, truncateText, getTextIcon, getTextTypeLabel, showToast } from './utils.js';
+import { waitForI18n, formatTimeAgo, truncateText, getTextIcon, getTextTypeLabel, showToast, getPlatform } from './utils.js';
 import { copyToClipboard, deleteHistoryItem, togglePin, getClipboardItem, getClipboardHistory, getFilteredHistory, getSearchQuery, requestHistoryRefresh, loadMoreItems, canLoadMore, getIsLoading, getTotalCount, hasActiveFilter, canLoadMoreFiltered, loadMoreFilteredItems } from './clipboard.js';
 
 const { invoke } = window.__TAURI__.core || {};
@@ -241,7 +241,7 @@ export async function loadSettings() {
   const autostartLabel = document.getElementById('autostart-label');
   if (autostartLabel) {
     try {
-      const os = await window.__TAURI__.os.platform();
+      const os = await getPlatform();
       const isWindows = os === 'windows' || os === 'win32';
       const isLinux = os === 'linux';
       const isMac = os === 'darwin' || os === 'macos';

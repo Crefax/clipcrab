@@ -69,3 +69,19 @@ export function getTextIcon(text, contentType) {
     default: return 'fas fa-text-width';
   }
 } 
+
+export async function getPlatform() {
+  try {
+    if (window.__TAURI__?.os?.platform) {
+      return await window.__TAURI__.os.platform();
+    }
+  } catch (error) {
+    console.error('Tauri platform detection failed:', error);
+  }
+
+  const platform = `${navigator.userAgentData?.platform || ''} ${navigator.platform || ''} ${navigator.userAgent || ''}`.toLowerCase();
+  if (platform.includes('win')) return 'windows';
+  if (platform.includes('mac')) return 'macos';
+  if (platform.includes('linux')) return 'linux';
+  return 'unknown';
+}
