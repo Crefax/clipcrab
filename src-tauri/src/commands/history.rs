@@ -705,6 +705,9 @@ fn chrono_like_timestamp() -> String {
 
 #[cfg(windows)]
 fn webview2_version() -> Option<String> {
+    use std::os::windows::process::CommandExt;
+    use windows_sys::Win32::System::Threading::CREATE_NO_WINDOW;
+
     let keys = [
         r"HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}",
         r"HKCU\Software\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}",
@@ -714,6 +717,7 @@ fn webview2_version() -> Option<String> {
     for key in keys {
         let output = std::process::Command::new("reg")
             .args(["query", key, "/v", "pv"])
+            .creation_flags(CREATE_NO_WINDOW)
             .output();
         let Ok(output) = output else {
             continue;
